@@ -117,6 +117,10 @@ class Atomate2Settings(BaseSettings):
         "VaspInputGenerator.",
     )
 
+    ARTATOP_CMD: str = Field(
+        default="artatop", description="Command to run ARTATOP calculations."
+    )
+
     LOBSTER_CMD: str = Field(
         default="lobster", description="Command to run standard version of VASP."
     )
