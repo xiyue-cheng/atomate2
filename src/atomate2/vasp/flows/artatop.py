@@ -1,18 +1,23 @@
+"""
+Flows for ARTATOP computations.
+
+This module provides a unified workflow for ARTATOP calculations combined
+with VASP workflows, including relaxation, optics, and ARTATOP jobs.
+"""
+
 from jobflow import Flow, Maker
 from pymatgen.core import Structure
 
-from atomate2.artatop.jobs.artatop_jobs import (  # Assuming these are implemented as job makers
+from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
+from atomate2.vasp.jobs.artatop import (  # Assuming these are implemented as job makers
     ARTMaker,
     LINMaker,
     NLINMaker,
 )
-from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
 
 
 class ArtatopWorkflowMaker(Maker):
-    """
-    Unified workflow maker for ARTATOP integrated with VASP workflows.
-    """
+    """Unified workflow maker for ARTATOP with VASP workflows."""
 
     name: str = "artatop_workflow"
     relax_maker: Maker = DoubleRelaxMaker()
@@ -22,9 +27,7 @@ class ArtatopWorkflowMaker(Maker):
     art_maker: Maker = ARTMaker()
 
     def make(self, structure: Structure, prev_dir: str = None) -> Flow:
-        """
-        Create the unified ARTATOP workflow.
-        """
+        """Create a unified workflow combining relaxation, optics, and ARTATOP."""
         # Step 1: Relaxation Flow
         relax_flow = self.relax_maker.make(structure=structure, prev_dir=prev_dir)
 
@@ -42,8 +45,8 @@ class ArtatopWorkflowMaker(Maker):
         # Combine all into a single flow
         return Flow(
             jobs=[
-                relax_flow,  # Ensure to unpack jobs from relax_flow
-                optics_flow,  # Ensure to unpack jobs from optics_flow
+                relax_flow,  # Unpack jobs from relax_flow
+                optics_flow,  # Unpack jobs from optics_flow
                 lin_job,
                 nlin_job,
                 art_job,

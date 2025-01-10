@@ -1,10 +1,16 @@
+"""Module defining functions for manipulating lobster files."""
+
 import logging
 from pathlib import Path
+
+from atomate2.common.files import copy_files, get_zfile, gunzip_files
+from atomate2.utils.file_client import FileClient, auto_fileclient
+from atomate2.utils.path import strip_hostname
 
 logger = logging.getLogger(__name__)
 
 # Default file lists
-DEFAULT_VASP_OUTPUT_FILES = [
+VASP_OUTPUT_FILES = [
     "OUTCAR",
     "vasprun.xml",
     "CHG",
@@ -22,17 +28,88 @@ DEFAULT_VASP_OUTPUT_FILES = [
     "XDATCAR",
     "OPTIC",
 ]
-DEFAULT_RELAXATION_FILES = ["OUTCAR", "CONTCAR"]
-DEFAULT_OPTICS_FILES = ["vasprun.xml"]
-DEFAULT_ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
-DEFAULT_ARTATOP_OUTPUT_DIRS = ["out_lin", "out_nonlin"]
-
-# ---------------------------------------------------------
-# FILE VALIDATION FUNCTIONS
-# ---------------------------------------------------------
+ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
+ARTATOP_OUTPUT_DIRS = ["out_lin", "out_nonlin"]
 
 
-def validate_required_files(required_files, directory):
+@auto_fileclient
+def copy_artatop_files(
+    src_dir: Path | str,
+    src_host: str | None = None,
+    file_client: FileClient = None,
+) -> None:
+    """
+    Copy VASP and ARTATOP files to the current directory.
+
+    This function will gunzip any gzipped files.
+
+    Parameters
+    ----------
+    src_dir : Path or str
+        The source directory.
+    src_host : str or None
+        The source hostname used to specify a remote filesystem. Can be given as
+        either "username@remote_host" or just "remote_host" in which case the username
+        will be inferred from the current user. If ``None``, the local filesystem will
+        be used as the source.
+    file_client : FileClient
+        A file client to use for performing file operations.
+    """
+    src_dir = strip_hostname(src_dir)  # Handle hostnames properly.
+
+    logger.info(f"Copying VASP and ARTATOP inputs from {src_dir}")
+    directory_listing = file_client.listdir(src_dir, host=src_host)
+
+    # Collect required files (VASP and ARTATOP)
+    files = []
+    for file in VASP_OUTPUT_FILES + ARTATOP_OUTPUT_FILES:
+        found_file = get_zfile(directory_listing, file, allow_missing=True)
+        if found_file is not None:
+            files.append(found_file)
+
+    # Copy required files
+    copy_files(
+        src_dir,
+        src_host=src_host,
+        include_files=files,
+        file_client=file_client,
+    )
+
+    # Decompress .gz files
+    gunzip_files(
+        include_files=files,
+        allow_missing=True,
+        file_client=file_client,
+    )
+
+    logger.info("Finished copying and decompressing files")
+
+
+def gunzip_file(gz_file: Path) -> None:
+    """
+    Decompress a .gz file.
+
+    Parameters
+    ----------
+    gz_file : Path
+        Path to the .gz file to decompress.
+    """
+    import gzip
+    import shutil
+
+    if not gz_file.exists():
+        logger.warning(f"File {gz_file} does not exist. Skipping decompression.")
+        return
+
+    output_file = gz_file.with_suffix("")  # Remove .gz extension
+    with gzip.open(gz_file, "rb") as f_in, open(output_file, "wb") as f_out:
+        shutil.copyfileobj(f_in, f_out)
+
+    gz_file.unlink()  # Remove the .gz file after decompression
+    logger.info(f"Decompressed {gz_file} to {output_file}")
+
+
+def validate_required_files(required_files: list[str], directory: Path) -> None:
     """
     Validate that required files are present in a directory.
 
@@ -41,109 +118,61 @@ def validate_required_files(required_files, directory):
     required_files : list of str
         List of required file names.
     directory : Path
-        Path to the directory to check.
+        Directory to validate.
 
-    Returns
-    -------
-    bool
-        True if all required files are present, False otherwise.
+    Raises
+    ------
+    FileNotFoundError
+        If any required files are missing.
     """
-    directory = Path(directory)
     missing_files = [file for file in required_files if not (directory / file).exists()]
     if missing_files:
-        logger.error(
-            f"Missing required files: {', '.join(missing_files)} in {directory}"
+        raise FileNotFoundError(
+            f"Missing files: {', '.join(missing_files)} in {directory}"
         )
-        return False
-    return True
 
 
-def validate_required_dirs(required_dirs, base_directory):
+def validate_required_dirs(required_dirs: list[str], directory: Path) -> bool:
     """
-    Validate that required directories are present.
+    Validate the presence of required directories in a directory.
 
     Parameters
     ----------
     required_dirs : list of str
         List of required directory names.
-    base_directory : Path
-        Path to the base directory to check.
+    directory : Path
+        Directory to validate.
 
     Returns
     -------
     bool
-        True if all required directories are present, False otherwise.
+        True if all directories are present, False otherwise.
     """
-    base_directory = Path(base_directory)
-    missing_dirs = [
-        dir_name
-        for dir_name in required_dirs
-        if not (base_directory / dir_name).is_dir()
-    ]
+    directory = Path(directory)
+    missing_dirs = [d for d in required_dirs if not (directory / d).is_dir()]
     if missing_dirs:
-        logger.error(
-            f"Missing required directories: {', '.join(missing_dirs)} in {base_directory}"
+        raise FileNotFoundError(
+            f"Missing directories: {', '.join(missing_dirs)} in {directory}"
         )
-        return False
     return True
 
 
-# ---------------------------------------------------------
-# PARSING-SPECIFIC VALIDATIONS
-# ---------------------------------------------------------
-
-
-def validate_relaxation_files(directory):
+def validate_vasp_and_artatop_outputs(directory: Path) -> bool:
     """
-    Validate files required for relaxation parsing.
+    Validate all VASP and ARTATOP outputs together.
 
     Parameters
     ----------
     directory : Path
-        Path to the relaxation output directory.
+        Directory containing the output files.
 
     Returns
     -------
     bool
-        True if all required relaxation files are present, False otherwise.
+        True if all required files and directories are present, False otherwise.
     """
-    logger.info("Validating relaxation files...")
-    return validate_required_files(DEFAULT_RELAXATION_FILES, directory)
-
-
-def validate_optics_files(directory):
-    """
-    Validate files required for optics parsing.
-
-    Parameters
-    ----------
-    directory : Path
-        Path to the optics output directory.
-
-    Returns
-    -------
-    bool
-        True if all required optics files are present, False otherwise.
-    """
-    logger.info("Validating optics files...")
-    return validate_required_files(DEFAULT_OPTICS_FILES, directory)
-
-
-def validate_artatop_outputs(directory):
-    """
-    Validate outputs required for ARTATOP parsing.
-
-    Parameters
-    ----------
-    directory : Path
-        Path to the ARTATOP output directory.
-
-    Returns
-    -------
-    bool
-        True if all required ARTATOP outputs (files and directories) are present, False otherwise.
-    """
-    logger.info("Validating ARTATOP outputs...")
-    files_valid = validate_required_files(DEFAULT_ARTATOP_OUTPUT_FILES, directory)
-    dirs_valid = validate_required_dirs(DEFAULT_ARTATOP_OUTPUT_DIRS, directory)
-    return files_valid and dirs_valid
+    logger.info(f"Validating files in {directory}")
+    validate_required_files(VASP_OUTPUT_FILES + ARTATOP_OUTPUT_FILES, directory)
+    validate_required_dirs(ARTATOP_OUTPUT_DIRS, directory)
+    logger.info("Validation successful.")
+    return True

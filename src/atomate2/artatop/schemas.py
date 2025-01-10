@@ -1,174 +1,100 @@
-from typing import Optional
+"""Module defining ARTATOP document schemas."""
+
+from pathlib import Path
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
 
-# ---------------------------------------------------------
-# RELAXATION OUTPUT SCHEMA
-# ---------------------------------------------------------
-class RelaxationOutput(BaseModel):
-    final_structure: dict = Field(
-        ..., description="Relaxed structure in dictionary format."
-    )
-    energy: float = Field(..., description="Final energy after relaxation.")
-    forces: list[list[float]] = Field(..., description="Atomic forces on each atom.")
-    stress: list[float] = Field(..., description="Stress tensor components.")
+class LinearOpticalResponse(BaseModel):
+    """Represents the linear optical response data."""
 
-
-# ---------------------------------------------------------
-# OPTICS OUTPUT SCHEMA
-# ---------------------------------------------------------
-class OpticsOutput(BaseModel):
-    dielectric_function: dict[str, list[float]] = Field(
-        ..., description="Real and imaginary parts of the dielectric function."
-    )
-    absorption_coefficient: list[float] = Field(
-        ..., description="Absorption coefficient as a function of energy."
-    )
-
-
-# ---------------------------------------------------------
-# LINEAR OPTICAL PROPERTIES SCHEMA
-# ---------------------------------------------------------
-class LinearOpticalData(BaseModel):
     energy: float = Field(..., description="Energy value in eV.")
-    properties: dict[str, float] = Field(
-        ...,
-        description="Optical properties at the given energy (e.g., Re(eps), Im(eps)).",
+    real_part: float = Field(..., description="Real part of the dielectric function.")
+    imaginary_part: float = Field(
+        ..., description="Imaginary part of the dielectric function."
+    )
+    absorption_coefficient: Optional[float] = Field(
+        None, description="Absorption coefficient at the given energy."
+    )
+    refractive_index: Optional[float] = Field(
+        None, description="Refractive index at the given energy."
+    )
+    extinction_coefficient: Optional[float] = Field(
+        None, description="Extinction coefficient at the given energy."
     )
 
 
-class LinearOpticalFile(BaseModel):
-    tensor_component: str = Field(
-        ..., description="Tensor component (e.g., 'XX', 'YY')."
-    )
-    metadata: dict[str, float] = Field(
-        ...,
-        description="Metadata for the calculation (e.g., broadening, scissors shift).",
-    )
-    data: list[LinearOpticalData] = Field(
-        ..., description="List of optical property data points."
-    )
+class NonlinearOpticalResponse(BaseModel):
+    """Represents the nonlinear optical response data."""
 
-
-# ---------------------------------------------------------
-# NONLINEAR OPTICAL PROPERTIES SCHEMA
-# ---------------------------------------------------------
-class NonlinearOpticalData(BaseModel):
     energy: float = Field(..., description="Energy value in eV.")
-    total_values: Optional[dict[str, float]] = Field(
-        None, description="Total nonlinear optical values (e.g., Tot-Im Chi(-2w,w,w))."
+    total_real_part: float = Field(
+        ..., description="Total real part of the second harmonic generation response."
     )
-    contributions: Optional[dict[str, float]] = Field(
-        None,
-        description="Contribution-specific nonlinear optical properties (e.g., Re Inter(2w)).",
-    )
-
-
-class NonlinearOpticalFile(BaseModel):
-    tensor_component: str = Field(..., description="Tensor component (e.g., 'YYY').")
-    metadata: dict[str, float] = Field(
+    total_imaginary_part: float = Field(
         ...,
-        description="Metadata for the calculation (e.g., broadening, scissors shift).",
+        description="Total imaginary part of the second harmonic generation response.",
     )
-    total_data: list[NonlinearOpticalData] = Field(
-        ..., description="Total nonlinear optical property data."
-    )
-    contribution_data: list[NonlinearOpticalData] = Field(
-        ..., description="Contribution-specific nonlinear optical property data."
+    contributions: Optional[dict[str, Any]] = Field(
+        None, description="Detailed contributions to the nonlinear optical response."
     )
 
 
-# ---------------------------------------------------------
-# ATOMIC CONTRIBUTIONS SCHEMA
-# ---------------------------------------------------------
-class AtomicContributionData(BaseModel):
-    energy: float = Field(..., description="Energy value in eV.")
-    contributions: list[float] = Field(
-        ..., description="List of atomic contributions for the major component."
+class AtomicContributions(BaseModel):
+    """Represents atomic contributions to nonlinear optical properties."""
+
+    atom: str = Field(..., description="Atom contributing to the property.")
+    orbital_contributions: dict[str, float] = Field(
+        ..., description="Contributions by orbitals (s, p, d)."
+    )
+    total_contribution: float = Field(
+        ..., description="Total contribution of the atom."
     )
 
 
-class AtomicContributionFile(BaseModel):
-    major_component: str = Field(
-        ..., description="Tensor component with the highest magnitude (e.g., 'YYY')."
-    )
-    data: list[AtomicContributionData] = Field(
-        ..., description="Atomic contributions data for the major component."
-    )
-
-
-# ---------------------------------------------------------
-# ARTATOP TASK DOCUMENT SCHEMA
-# ---------------------------------------------------------
 class ArtatopTaskDocument(BaseModel):
+    """Main schema for an ARTATOP task document."""
+
     dir_name: str = Field(..., description="Directory containing ARTATOP outputs.")
-    relaxation_output: Optional[RelaxationOutput] = Field(
-        None, description="Parsed relaxation output data."
+    linear_response: list["LinearOpticalResponse"] = Field(
+        ..., description="Parsed linear optical response data."
     )
-    optics_output: Optional[OpticsOutput] = Field(
-        None, description="Parsed optics output data."
+    nonlinear_response: list["NonlinearOpticalResponse"] = Field(
+        ..., description="Parsed nonlinear optical response data."
     )
-    linear_response: list[LinearOpticalFile] = Field(
-        [], description="Parsed linear optical response data."
-    )
-    nonlinear_response: list[NonlinearOpticalFile] = Field(
-        [], description="Parsed nonlinear optical response data."
-    )
-    atomic_contributions: Optional[AtomicContributionFile] = Field(
-        None, description="Atomic contributions data for the major component."
+    atomic_contributions: Optional[list["AtomicContributions"]] = Field(
+        None, description="Parsed atomic contributions data."
     )
 
     @classmethod
     def from_directory(cls, dir_name: str) -> "ArtatopTaskDocument":
-        """
-        Parses all outputs from the workflow and constructs the task document.
-
-        Parameters
-        ----------
-        dir_name : str
-            Path to the ARTATOP output directory.
-
-        Returns
-        -------
-        ArtatopTaskDocument
-            The parsed ARTATOP task document.
-        """
-        from artatop_parser import (
+        """Parse ARTATOP outputs and construct the task document."""
+        from atomate2.artatop.files import validate_vasp_and_artatop_outputs
+        from atomate2.artatop.parsers import (
             parse_atomic_contributions,
-            parse_optics_output,
-            parse_out_lin,
-            parse_out_nonlin,
-            parse_relaxation_output,
+            parse_linear_response,
+            parse_nonlinear_response,
         )
 
-        # Parse relaxation
-        relaxation_output = (
-            parse_relaxation_output(f"{dir_name}/relaxation")
-            if Path(f"{dir_name}/relaxation").exists()
+        # Convert dir_name to a Path object
+        dir_path = Path(dir_name)
+
+        # Validate required files and directories
+        validate_vasp_and_artatop_outputs(dir_path)
+
+        # Parse data from the specified directories
+        linear_response = parse_linear_response(dir_path / "out_lin")
+        nonlinear_response = parse_nonlinear_response(dir_path / "out_nonlin")
+        atomic_contributions = (
+            parse_atomic_contributions(dir_path / "out_nonlin")
+            if (dir_path / "out_nonlin" / "arp_nonlin.txt").exists()
             else None
         )
 
-        # Parse optics
-        optics_output = (
-            parse_optics_output(f"{dir_name}/optics")
-            if Path(f"{dir_name}/optics").exists()
-            else None
-        )
-
-        # Parse linear optical files
-        linear_response = parse_out_lin(f"{dir_name}/out_lin")
-
-        # Parse nonlinear optical files
-        nonlinear_response = parse_out_nonlin(f"{dir_name}/out_nonlin")
-
-        # Parse atomic contributions
-        atomic_contributions = parse_atomic_contributions(f"{dir_name}/out_nonlin")
-
+        # Construct the task document
         return cls(
-            dir_name=dir_name,
-            relaxation_output=relaxation_output,
-            optics_output=optics_output,
+            dir_name=str(dir_name),
             linear_response=linear_response,
             nonlinear_response=nonlinear_response,
             atomic_contributions=atomic_contributions,

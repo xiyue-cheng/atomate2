@@ -1,3 +1,5 @@
+"""Module defining flow-related utilities for ARTATOP workflows."""
+
 from jobflow import run_locally
 from jobflow_remote import submit_flow
 from pymatgen.core import Structure
@@ -22,7 +24,7 @@ run_locally(artatop_flow, create_folders=True)
 # resIurces = {"nodes": 1, "ntasks": 4, "partition": "batch","time":"1:00:00"}
 resources = {"nodes": 1, "partition": "mars", "time": "1:00:00"}
 # exec_config="yhrun -N 1 -p cp6"
-submit_flow(workflow, project="atlas", worker="tianhe_worker", resources=resources)
+submit_flow(artatop_flow, project="atlas", worker="tianhe_worker", resources=resources)
 # resources = {"cores": 4 }
 # exec_config="mpirun -n 4"
 # submit_flow(lobster,project="atlas",worker="th-ex-ln1_worker",resources=resources)

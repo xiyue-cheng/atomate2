@@ -1,66 +1,101 @@
+"""Module for defining ARTATOP jobs."""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from jobflow import Maker, job
 
-from atomate2.artatop.files import generate_artatop_inputs
-from atomate2.artatop.parser import parse_artatop_outputs
-from atomate2.artatop.run1 import run_artatop_direct
+from atomate2 import SETTINGS
+from atomate2.artatop.files import (
+    ARTATOP_OUTPUT_FILES,
+    VASP_OUTPUT_FILES,
+    copy_artatop_files,
+)
+from atomate2.artatop.run import run_artatop
 from atomate2.artatop.schemas import ArtatopTaskDocument
+from atomate2.artatop.sets.core import InputFileHandler
+from atomate2.common.files import gzip_output_folder
+
+logger = logging.getLogger(__name__)
+
+_FILES_TO_ZIP = [*ARTATOP_OUTPUT_FILES, *VASP_OUTPUT_FILES]
 
 
+@dataclass
 class ARTATOPMaker(Maker):
     """
-    Maker for running ARTATOP calculations directly (without Custodian).
+    ARTATOP job maker.
+
+    The maker copies DFT output files necessary for the ARTATOP run. It generates
+    ARTATOP input files using `InputFileHandler`, runs ARTATOP, compresses outputs,
+    and parses the results.
+
+    Parameters
+    ----------
+    name : str
+        Name of jobs produced by this maker.
+    task_document_kwargs : dict
+        Keyword arguments passed to :obj:`.ArtatopTaskDocument.from_directory`.
+    run_artatop_kwargs : dict
+        Keyword arguments passed to :obj:`.run_artatop`.
+    calc_type : str
+        Calculation type ("lin", "nlin", "art").
+    custom_components : str
+        Optional components for ART calculations (e.g., tensor components).
     """
 
-    name = "ARTATOP Maker"
-
-    def __init__(
-        self,
-        calc_type: str,
-        output_dir: str | Path = "./artatop_outputs",
-        parameters: dict[str, float] | None = None,
-        src_dir: str | None = None,
-        custom_components: str | None = None,
-    ):
-        self.calc_type = calc_type
-        self.output_dir = Path(output_dir).resolve()
-        self.parameters = parameters or {}
-        self.src_dir = src_dir
-        self.custom_components = custom_components
+    name: str = "artatop"
+    task_document_kwargs: dict = field(default_factory=dict)
+    run_artatop_kwargs: dict = field(default_factory=dict)
+    calc_type: str = "lin"
+    custom_components: str | None = None
 
     @job(output_schema=ArtatopTaskDocument)
-    def make(self) -> ArtatopTaskDocument:
+    def make(self, vasp_dir: str | Path) -> ArtatopTaskDocument:
         """
-        Run an ARTATOP calculation directly and return the task document.
+        Run an ARTATOP calculation.
+
+        Parameters
+        ----------
+        vasp_dir : str or Path
+            Directory containing VASP outputs required for ARTATOP.
 
         Returns
         -------
         ArtatopTaskDocument
             Parsed results from ARTATOP calculations.
         """
-        # Generate the input file
-        input_file = generate_artatop_inputs(
-            calculation_type=self.calc_type,
-            parameters=self.parameters,
-            src_dir=self.src_dir,
-            custom_components=self.custom_components,
+        # Copy required files (VASP + ARTATOP)
+        copy_artatop_files(vasp_dir)
+
+        # Create input files for ARTATOP
+        input_handler = InputFileHandler(output_dir="./artatop_outputs")
+        artatop_input = input_handler.get_input_set(
+            calc_type=self.calc_type,
+            calc_dir=Path.cwd(),
+            component=self.custom_components,
         )
 
-        # Construct ARTATOP command
-        artatop_cmd = (
-            f"artatop < {input_file} > {self.output_dir}/output_{self.calc_type}"
+        # Run ARTATOP
+        logger.info(f"Running ARTATOP for {self.calc_type} calculation")
+        run_artatop(
+            artatop_cmd=f"artatop < {artatop_input} > output_{self.calc_type}",
+            **self.run_artatop_kwargs,
         )
 
-        # Run ARTATOP directly
-        run_artatop_direct(
-            artatop_cmd=artatop_cmd,
-            output_dir=self.output_dir,
-            input_file=input_file,
+        # Compress output files
+        logger.info("Compressing ARTATOP output files")
+        gzip_output_folder(
+            directory=Path.cwd(),
+            setting=SETTINGS.ARTATOP_ZIP_FILES,
+            files_list=_FILES_TO_ZIP,
         )
 
-        # Parse the outputs using the parser function
-        parsed_outputs = parse_artatop_outputs(self.output_dir)
-
-        # Return the parsed outputs as a task document
-        return ArtatopTaskDocument.from_parsed_outputs(parsed_outputs)
+        # Parse outputs
+        logger.info("Parsing ARTATOP outputs")
+        return ArtatopTaskDocument.from_directory(
+            dir_name=str(Path.cwd()), **self.task_document_kwargs
+        )
