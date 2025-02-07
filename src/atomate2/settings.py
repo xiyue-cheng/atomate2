@@ -118,7 +118,7 @@ class Atomate2Settings(BaseSettings):
     )
 
     ARTATOP_CMD: str = Field(
-        default="artatop", description="Command to run ARTATOP calculations."
+        default="artatop", description="Command to run standard version of VASP."
     )
     ARTATOP_CUSTODIAN_MAX_ERRORS: int = Field(
         5, description="Maximum number of errors to correct before custodian gives up"

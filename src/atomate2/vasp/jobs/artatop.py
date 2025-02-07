@@ -1,18 +1,16 @@
-"""
-Module defines job makers for ARTATOP workflows.
+"""Module Defining Job Makers for ARTATOP workflow."""
 
-It includes:
-- LINMaker: For linear optical response calculations.
-- NLINMaker: For nonlinear optical response calculations.
-- ARTMaker: For atomic response calculations.
-"""
+from __future__ import annotations
 
+import logging
 from pathlib import Path
 
-from jobflow import Maker, job
+from jobflow import Maker, Response, job
 
 from atomate2.artatop.run import run_artatop
 from atomate2.artatop.sets.core import InputFileHandler
+
+logger = logging.getLogger(__name__)
 
 
 class LINMaker(Maker):
@@ -25,28 +23,40 @@ class LINMaker(Maker):
         self.input_handler: InputFileHandler  # Properly annotate the type
 
     @job
-    def make(self, optics_dir: str, base_dir: str) -> dict:
+    def make(self, prev_dir: Path | str, job_dir: Path | str) -> Response:
         """
         Run LIN (linear) calculations.
 
         Parameters
         ----------
-        optics_dir : str
+        prev_dir : str
             Directory containing optics output.
-        base_dir : str
+        job_dir : str
             Base directory for storing LIN outputs.
 
         Returns
         -------
-        dict
-            Output path of the LIN calculation.
+        Response
+        A jobflow Response containing the output directory for the LIN calculation.
         """
-        output_dir = Path(base_dir) / "out_lin"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        prev_dir = Path(prev_dir)
+        job_dir = Path(job_dir)
 
-        self.input_handler = InputFileHandler(output_dir=str(output_dir))
-        lin_input = self.input_handler.get_input_set("lin", output_dir)
-        lin_output = output_dir / "re_lin"
+        out_lin = job_dir / "out_lin"
+        out_lin.mkdir(parents=True, exist_ok=True)
+
+        # Required files to copy from prev_dir
+        required_files = ["INCAR.gz", "CONTCAR.gz", "OPTIC", "PROCAR.gz", "WAVEDER.gz"]
+        for file_name in required_files:
+            source_file = prev_dir / file_name
+            if not source_file.exists():
+                raise FileNotFoundError(
+                    f"Required file {file_name} not found in {prev_dir}."
+                )
+
+        self.input_handler = InputFileHandler(output_dir=str(job_dir))
+        lin_input = self.input_handler.get_input_set("lin", job_dir)
+        lin_output = job_dir / "re_lin"
 
         command = f"artatop < {lin_input} > {lin_output}"
         run_artatop(job_type="direct", artatop_cmd=command)
@@ -64,28 +74,40 @@ class NLINMaker(Maker):
         self.input_handler: InputFileHandler  # Properly annotate the type
 
     @job
-    def make(self, lin_output: str, base_dir: str) -> dict:
+    def make(self, prev_dir: Path | str, job_dir: Path | str) -> Response:
         """
         Run NLIN (non-linear) calculations.
 
         Parameters
         ----------
-        lin_output : str
-            Path to the LIN output file.
-        base_dir : str
+        prev_dir : str
+            Directory containing optics output.
+        job_dir : str
             Base directory for storing NLIN outputs.
 
         Returns
         -------
-        dict
-            Output path of the NLIN calculation.
+        Response
+        A jobflow Response containing the output directory for the NLIN calculation.
         """
-        output_dir = Path(base_dir) / "out_nonlin"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        prev_dir = Path(prev_dir)
+        job_dir = Path(job_dir)
 
-        self.input_handler = InputFileHandler(output_dir=str(output_dir))
-        nlin_input = self.input_handler.get_input_set("nlin", output_dir)
-        nlin_output = output_dir / "re_nlin"
+        out_nonlin = job_dir / "out_nonlin"
+        out_nonlin.mkdir(parents=True, exist_ok=True)
+
+        # Required files to copy from prev_dir
+        required_files = ["INCAR.gz", "CONTCAR.gz", "OPTIC", "PROCAR.gz", "WAVEDER.gz"]
+        for file_name in required_files:
+            source_file = prev_dir / file_name
+            if not source_file.exists():
+                raise FileNotFoundError(
+                    f"Required file {file_name} not found in {prev_dir}."
+                )
+
+        self.input_handler = InputFileHandler(output_dir=str(job_dir))
+        nlin_input = self.input_handler.get_input_set("nlin", job_dir)
+        nlin_output = job_dir / "re_nlin"
 
         command = f"artatop < {nlin_input} > {nlin_output}"
         run_artatop(job_type="direct", artatop_cmd=command)
@@ -103,29 +125,32 @@ class ARTMaker(Maker):
         self.input_handler: InputFileHandler  # Properly annotate the type
 
     @job
-    def make(self, nlin_output: str, base_dir: str) -> dict:
+    def make(self, prev_dir: Path | str, job_dir: Path | str) -> Response:
         """
         Run ART calculations.
 
         Parameters
         ----------
-        nlin_output : str
-            Path to the NLIN output file.
-        base_dir : str
+        prev_dir : str
+            Directory containing optics output.
+        job_dir : str
             Base directory for storing ART outputs.
 
         Returns
         -------
-        dict
-            Output path of the ART calculation.
+        Response
+        A jobflow Response containing the output directory for the ART calculation.
         """
-        output_dir = Path(base_dir) / "out_nonlin"  # Same as NLIN outputs
-        output_dir.mkdir(parents=True, exist_ok=True)
+        prev_dir = Path(prev_dir)
+        job_dir = Path(job_dir)
 
-        self.input_handler = InputFileHandler(output_dir=str(output_dir))
-        component = self.input_handler.determine_highest_component(Path(nlin_output))
-        art_input = self.input_handler.get_input_set("art", output_dir, component)
-        art_output = output_dir / "re_art"
+        out_nonlin = job_dir / "out_nonlin"
+        out_nonlin.mkdir(parents=True, exist_ok=True)
+
+        self.input_handler = InputFileHandler(output_dir=str(job_dir))
+        component = self.input_handler.determine_highest_component(job_dir)
+        art_input = self.input_handler.get_input_set("art", job_dir, component)
+        art_output = job_dir / "re_art"
 
         command = f"artatop < {art_input} > {art_output}"
         run_artatop(job_type="direct", artatop_cmd=command)

@@ -54,7 +54,7 @@ class ARTATOPMaker(Maker):
     custom_components: str | None = None
 
     @job(output_schema=ArtatopTaskDocument)
-    def make(self, vasp_dir: str | Path) -> ArtatopTaskDocument:
+    def make(self, optics_dir: str | Path) -> ArtatopTaskDocument:
         """
         Run an ARTATOP calculation.
 
@@ -69,7 +69,7 @@ class ARTATOPMaker(Maker):
             Parsed results from ARTATOP calculations.
         """
         # Copy required files (VASP + ARTATOP)
-        copy_artatop_files(vasp_dir)
+        copy_artatop_files(optics_dir)
 
         # Create input files for ARTATOP
         input_handler = InputFileHandler(output_dir="./artatop_outputs")

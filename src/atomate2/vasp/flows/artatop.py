@@ -5,6 +5,10 @@ This module provides a unified workflow for ARTATOP calculations combined
 with VASP workflows, including relaxation, optics, and ARTATOP jobs.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from jobflow import Flow, Maker
 from pymatgen.core import Structure
 
@@ -14,6 +18,13 @@ from atomate2.vasp.jobs.artatop import (  # Assuming these are implemented as jo
     LINMaker,
     NLINMaker,
 )
+
+try:
+    import ijson
+except ImportError:
+    ijson = None
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
 
 
 class ArtatopWorkflowMaker(Maker):
@@ -39,7 +50,7 @@ class ArtatopWorkflowMaker(Maker):
 
         # Step 3: ARTATOP Jobs
         lin_job = self.lin_maker.make(prev_dir=optics_flow.output.dir_name)
-        nlin_job = self.nlin_maker.make(prev_dir=lin_job.output["lin_output"])
+        nlin_job = self.nlin_maker.make(prev_dir=optics_flow.output.dir_name)
         art_job = self.art_maker.make(prev_dir=nlin_job.output["nlin_output"])
 
         # Combine all into a single flow

@@ -1,13 +1,13 @@
 """Module defining functions for manipulating lobster files."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
 
 from atomate2.common.files import copy_files, get_zfile, gunzip_files
 from atomate2.utils.file_client import FileClient, auto_fileclient
 from atomate2.utils.path import strip_hostname
-
-logger = logging.getLogger(__name__)
 
 # Default file lists
 VASP_OUTPUT_FILES = [
@@ -30,6 +30,8 @@ VASP_OUTPUT_FILES = [
 ]
 ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
 ARTATOP_OUTPUT_DIRS = ["out_lin", "out_nonlin"]
+
+logger = logging.getLogger(__name__)
 
 
 @auto_fileclient
@@ -82,31 +84,7 @@ def copy_artatop_files(
         file_client=file_client,
     )
 
-    logger.info("Finished copying and decompressing files")
-
-
-def gunzip_file(gz_file: Path) -> None:
-    """
-    Decompress a .gz file.
-
-    Parameters
-    ----------
-    gz_file : Path
-        Path to the .gz file to decompress.
-    """
-    import gzip
-    import shutil
-
-    if not gz_file.exists():
-        logger.warning(f"File {gz_file} does not exist. Skipping decompression.")
-        return
-
-    output_file = gz_file.with_suffix("")  # Remove .gz extension
-    with gzip.open(gz_file, "rb") as f_in, open(output_file, "wb") as f_out:
-        shutil.copyfileobj(f_in, f_out)
-
-    gz_file.unlink()  # Remove the .gz file after decompression
-    logger.info(f"Decompressed {gz_file} to {output_file}")
+    logger.info("Finished copying inputs")
 
 
 def validate_required_files(required_files: list[str], directory: Path) -> None:

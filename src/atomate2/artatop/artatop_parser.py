@@ -134,26 +134,47 @@ def parse_atomic_contributions(out_nonlin_dir: Path) -> list[AtomicContributions
 
 def parse_artatop_outputs(dir_name: str) -> dict:
     """
-    Parse all ARTATOP outputs and return a dictionary compatible with the schema.
+    Parse ARTATOP outputs from the specified directory and include metadata.
 
     Parameters
     ----------
     dir_name : str
-        Directory containing all ARTATOP outputs.
+        Directory containing ARTATOP output files.
 
     Returns
     -------
     dict
-        Parsed data structured for ArtatopTaskDocument.
+        Parsed data including linear response, nonlinear response,
+        atomic contributions, and metadata.
     """
-    directory = Path(dir_name)
-    linear_response = parse_linear_response(directory / "out_lin")
-    nonlinear_response = parse_nonlinear_response(directory / "out_nonlin")
-    atomic_contributions = parse_atomic_contributions(directory / "out_nonlin")
+    from atomate2.artatop.parsers import (
+        parse_atomic_contributions,
+        parse_linear_response,
+        parse_nonlinear_response,
+    )
 
-    return {
-        "dir_name": dir_name,
-        "linear_response": linear_response,
-        "nonlinear_response": nonlinear_response,
-        "atomic_contributions": atomic_contributions,
-    }
+    dir_path = Path(dir_name)
+
+    try:
+        # Parse individual components
+        linear_response = parse_linear_response(dir_path / "out_lin")
+        nonlinear_response = parse_nonlinear_response(dir_path / "out_nonlin")
+        atomic_contributions = (
+            parse_atomic_contributions(dir_path / "out_nonlin")
+            if (dir_path / "out_nonlin" / "arp_nonlin.txt").exists()
+            else None
+        )
+    except Exception:
+        logging.exception(f"Failed to parse ARTATOP outputs in {dir_name}")
+        raise
+    else:
+        # Collect metadata
+        metadata = {"dir_name": str(dir_path)}
+
+        # Return parsed data with metadata
+        return {
+            **metadata,
+            "linear_response": linear_response,
+            "nonlinear_response": nonlinear_response,
+            "atomic_contributions": atomic_contributions,
+        }
