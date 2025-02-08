@@ -1,0 +1,6 @@
+2023-12-04 11:46:13,652 INFO Hostname/IP lookup (this will take a few seconds)
+2023-12-04 11:46:13,653 INFO Launching Rocket
+2023-12-04 11:46:17,790 INFO RUNNING fw_id: 490586 in directory: /clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-12-01-05-49-04-146155/launcher_2023-12-04-19-46-06-857552
+2023-12-04 11:46:17,836 INFO Task started: {{atomate.qchem.firetasks.write_inputs.WriteInputFromIOSet}}.
+2023-12-04 11:46:17,842 INFO Task completed: {{atomate.qchem.firetasks.write_inputs.WriteInputFromIOSet}}
+2023-12-04 11:46:17,855 INFO Task started: {{atomate.qchem.firetasks.run_calc.RunQChemCustodian}}.

@@ -1,0 +1,59 @@
+ ----------------------------------------------------
+    OOO  PPPP  EEEEE N   N M   M PPPP
+   O   O P   P E     NN  N MM MM P   P
+   O   O PPPP  EEEEE N N N M M M PPPP   -- VERSION
+   O   O P     E     N  NN M   M P
+    OOO  P     EEEEE N   N M   M P
+ ----------------------------------------------------
+ running  128 mpi-ranks, with    1 threads/rank
+ distrk:  each k-point on   64 cores,    2 groups
+ distr:  one band on   16 cores,    4 groups
+ vasp.6.3.2 27Jun22 (build Jun 30 2023 15:13:53) complex                         
+ POSCAR found type information on POSCAR Si
+ POSCAR found :  1 types and       2 ions
+ Reading from existing POTCAR
+ scaLAPACK will be used
+ Reading from existing POTCAR
+ LDA part: xc-table for Pade appr. of Perdew
+ -----------------------------------------------------------------------------
+|                                                                             |
+|           W    W    AA    RRRRR   N    N  II  N    N   GGGG   !!!           |
+|           W    W   A  A   R    R  NN   N  II  NN   N  G    G  !!!           |
+|           W    W  A    A  R    R  N N  N  II  N N  N  G       !!!           |
+|           W WW W  AAAAAA  RRRRR   N  N N  II  N  N N  G  GGG   !            |
+|           WW  WW  A    A  R   R   N   NN  II  N   NN  G    G                |
+|           W    W  A    A  R    R  N    N  II  N    N   GGGG   !!!           |
+|                                                                             |
+|     The requested file  could not be found or opened for reading            |
+|     k-point information. Automatic k-point generation is used as a          |
+|     fallback, which may lead to unwanted results.                           |
+|                                                                             |
+ -----------------------------------------------------------------------------
+
+ found WAVECAR, reading the header
+ WAVECAR: different cutoff or change in lattice found
+ INCAR ok, starting setup
+ POSCAR ok, starting setup
+ FFT: planning ... GRIDC
+ FFT: planning ... GRID_SOFT
+ FFT: planning ... GRID
+ reading WAVECAR
+ the WAVECAR file was read successfully
+ initial charge from wavefunction
+ entering main loop
+       N       E                     dE             d eps       ncg     rms          rms(c)
+DAV:   1    -0.106480978819E+02   -0.10648E+02   -0.52115E+00  1808   0.139E+01    0.129E+00
+RMM:   2    -0.105783190439E+02    0.69779E-01   -0.49978E-02  1504   0.196E+00    0.703E-01
+RMM:   3    -0.105471729334E+02    0.31146E-01   -0.52463E-02  1504   0.162E+00    0.852E-02
+RMM:   4    -0.105476775486E+02   -0.50462E-03   -0.49054E-03  1504   0.652E-01    0.328E-02
+RMM:   5    -0.105477579788E+02   -0.80430E-04   -0.42327E-04  1508   0.211E-01    0.636E-03
+RMM:   6    -0.105477637722E+02   -0.57935E-05   -0.69499E-05  1518   0.812E-02    0.329E-03
+RMM:   7    -0.105477642440E+02   -0.47172E-06   -0.16616E-05  1488   0.379E-02    0.881E-04
+RMM:   8    -0.105477643275E+02   -0.83523E-07   -0.34264E-06  1216   0.170E-02
+   1 F= -.10547764E+02 E0= -.10547764E+02  d E =-.105478E+02  mag=    -0.0000
+ curvature:   0.00 expect dE= 0.000E+00 dE for cont linesearch  0.000E+00
+ trial: gam= 0.00000 g(F)=  0.205E-42 g(S)=  0.000E+00 ort = 0.000E+00 (trialstep = 0.100E+01)
+ search vector abs. value=  0.100E-09
+ reached required accuracy - stopping structural energy minimisation
+ writing wavefunctions
+ PROFILE, used timers:     473

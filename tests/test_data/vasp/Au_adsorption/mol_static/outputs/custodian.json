@@ -1,0 +1,174 @@
+[
+    {
+        "job": {
+            "@module": "custodian.vasp.jobs",
+            "@class": "VaspJob",
+            "@version": "2024.1.9",
+            "vasp_cmd": [
+                "srun",
+                "-n",
+                "16",
+                "-c",
+                "64",
+                "--cpu_bind=cores",
+                "vasp_std"
+            ],
+            "output_file": "vasp.out",
+            "stderr_file": "std_err.txt",
+            "suffix": "",
+            "final": true,
+            "backup": true,
+            "auto_npar": false,
+            "auto_gamma": true,
+            "settings_override": null,
+            "gamma_vasp_cmd": [
+                "vasp_gam"
+            ],
+            "copy_magmom": false,
+            "auto_continue": false
+        },
+        "corrections": [
+            {
+                "errors": [
+                    "dentet"
+                ],
+                "actions": [
+                    {
+                        "dict": "KPOINTS",
+                        "action": {
+                            "_set": {
+                                "kpoints": [
+                                    [
+                                        4,
+                                        4,
+                                        4
+                                    ]
+                                ]
+                            }
+                        }
+                    }
+                ],
+                "handler": {
+                    "@module": "custodian.vasp.handlers",
+                    "@class": "VaspErrorHandler",
+                    "@version": "2024.1.9",
+                    "output_filename": "vasp.out",
+                    "errors_subset_to_catch": [
+                        "tet",
+                        "inv_rot_mat",
+                        "brmix",
+                        "subspacematrix",
+                        "tetirr",
+                        "incorrect_shift",
+                        "real_optlay",
+                        "rspher",
+                        "dentet",
+                        "too_few_bands",
+                        "triple_product",
+                        "rot_matrix",
+                        "brions",
+                        "pricel",
+                        "zpotrf",
+                        "amin",
+                        "zbrent",
+                        "pssyevx",
+                        "pdsyevx",
+                        "eddrmm",
+                        "edddav",
+                        "algo_tet",
+                        "grad_not_orth",
+                        "nicht_konv",
+                        "zheev",
+                        "eddiag",
+                        "elf_kpar",
+                        "elf_ncl",
+                        "rhosyg",
+                        "posmap",
+                        "point_group",
+                        "pricelv",
+                        "symprec_noise",
+                        "dfpt_ncore",
+                        "bravais",
+                        "nbands_not_sufficient",
+                        "hnform",
+                        "coef",
+                        "set_core_wf",
+                        "read_error"
+                    ],
+                    "vtst_fixes": false
+                }
+            },
+            {
+                "errors": [
+                    "dentet"
+                ],
+                "actions": [
+                    {
+                        "dict": "INCAR",
+                        "action": {
+                            "_set": {
+                                "ISMEAR": 0,
+                                "SIGMA": 0.05
+                            }
+                        }
+                    }
+                ],
+                "handler": {
+                    "@module": "custodian.vasp.handlers",
+                    "@class": "VaspErrorHandler",
+                    "@version": "2024.1.9",
+                    "output_filename": "vasp.out",
+                    "errors_subset_to_catch": [
+                        "tet",
+                        "inv_rot_mat",
+                        "brmix",
+                        "subspacematrix",
+                        "tetirr",
+                        "incorrect_shift",
+                        "real_optlay",
+                        "rspher",
+                        "dentet",
+                        "too_few_bands",
+                        "triple_product",
+                        "rot_matrix",
+                        "brions",
+                        "pricel",
+                        "zpotrf",
+                        "amin",
+                        "zbrent",
+                        "pssyevx",
+                        "pdsyevx",
+                        "eddrmm",
+                        "edddav",
+                        "algo_tet",
+                        "grad_not_orth",
+                        "nicht_konv",
+                        "zheev",
+                        "eddiag",
+                        "elf_kpar",
+                        "elf_ncl",
+                        "rhosyg",
+                        "posmap",
+                        "point_group",
+                        "pricelv",
+                        "symprec_noise",
+                        "dfpt_ncore",
+                        "bravais",
+                        "nbands_not_sufficient",
+                        "hnform",
+                        "coef",
+                        "set_core_wf",
+                        "read_error"
+                    ],
+                    "vtst_fixes": false
+                }
+            }
+        ],
+        "handler": null,
+        "validator": null,
+        "max_errors": false,
+        "max_errors_per_job": false,
+        "max_errors_per_handler": false,
+        "nonzero_return_code": false
+    }
+]

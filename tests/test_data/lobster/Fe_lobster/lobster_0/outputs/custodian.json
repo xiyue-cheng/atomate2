@@ -1,0 +1,24 @@
+[
+    {
+        "job": {
+            "@module": "custodian.lobster.jobs",
+            "@class": "LobsterJob",
+            "@version": "2023.10.9",
+            "lobster_cmd": [
+                "/home/htc/anaik/Lobster/lobster"
+            ],
+            "output_file": "lobsterout",
+            "stderr_file": "std_err_lobster.txt",
+            "gzipped": true,
+            "add_files_to_gzip": [],
+            "backup": true
+        },
+        "corrections": [],
+        "handler": null,
+        "validator": null,
+        "max_errors": false,
+        "max_errors_per_job": false,
+        "max_errors_per_handler": false,
+        "nonzero_return_code": false
+    }
+]

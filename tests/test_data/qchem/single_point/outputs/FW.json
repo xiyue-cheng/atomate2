@@ -1,0 +1,150 @@
+{
+    "spec": {
+        "tags": {
+            "class": "pdk_form_intermediate_opts",
+            "exec_clust": "savio"
+        },
+        "_tasks": [
+            {
+                "molecule": null,
+                "qchem_input_set": "SinglePointSet",
+                "input_file": "mol.qin",
+                "qchem_input_params": {
+                    "dft_rung": 4,
+                    "basis_set": "def2-qzvppd",
+                    "pcm_dielectric": "8.93",
+                    "overwrite_inputs": {
+                        "rem": {
+                            "method": "wb97mv"
+                        }
+                    }
+                },
+                "_fw_name": "{{atomate.qchem.firetasks.write_inputs.WriteInputFromIOSet}}"
+            },
+            {
+                "qchem_cmd": ">>qchem_cmd<<",
+                "multimode": ">>multimode<<",
+                "input_file": "mol.qin",
+                "output_file": "mol.qout",
+                "max_cores": ">>max_cores<<",
+                "max_errors": 5,
+                "job_type": "normal",
+                "_fw_name": "{{atomate.qchem.firetasks.run_calc.RunQChemCustodian}}"
+            },
+            {
+                "db_file": ">>db_file<<",
+                "input_file": "mol.qin",
+                "output_file": "mol.qout",
+                "additional_fields": {
+                    "task_label": "ffopt_formed_water.xyz_wb97mv",
+                    "tags": {
+                        "class": "pdk_form_intermediate_opts",
+                        "exec_clust": "savio"
+                    }
+                },
+                "_fw_name": "{{atomate.qchem.firetasks.parse_outputs.QChemToDb}}"
+            }
+        ],
+        "prev_calc_molecule": {
+            "@module": "pymatgen.core.structure",
+            "@class": "Molecule",
+            "charge": 0,
+            "spin_multiplicity": 1,
+            "sites": [
+                {
+                    "name": "O",
+                    "species": [
+                        {
+                            "element": "O",
+                            "occu": 1
+                        }
+                    ],
+                    "xyz": [
+                        -1.990871357,
+                        0.0730526367,
+                        -0.4530401203
+                    ],
+                    "properties": {}
+                },
+                {
+                    "name": "H",
+                    "species": [
+                        {
+                            "element": "H",
+                            "occu": 1
+                        }
+                    ],
+                    "xyz": [
+                        -1.0278827659,
+                        0.0370900361,
+                        -0.4710434085
+                    ],
+                    "properties": {}
+                },
+                {
+                    "name": "H",
+                    "species": [
+                        {
+                            "element": "H",
+                            "occu": 1
+                        }
+                    ],
+                    "xyz": [
+                        -2.2739158771,
+                        -0.7507726728,
+                        -0.8654564712
+                    ],
+                    "properties": {}
+                }
+            ]
+        },
+        "prev_calc_mulliken": [
+            -0.325595,
+            0.162731,
+            0.162864
+        ]
+    },
+    "fw_id": 490586,
+    "created_on": "2023-12-04T19:42:02.736113",
+    "updated_on": "2023-12-04T19:46:17.732680",
+    "launches": [
+        {
+            "fworker": {
+                "name": "savio_fworker",
+                "category": "",
+                "query": "{\"spec.tags.exec_clust\": \"savio\"}",
+                "env": {
+                    "db_file": "/global/home/users/rdguha/miniconda3/envs/rg_cup/config/db.json",
+                    "calc_loc": "/tmp",
+                    "max_cores": 40,
+                    "qchem_cmd": "qchem",
+                    "feff_cmd": "feff",
+                    "multimode": "openmp"
+                }
+            },
+            "fw_id": 490586,
+            "launch_dir": "/clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-12-01-05-49-04-146155/launcher_2023-12-04-19-46-06-857552",
+            "host": "n0271.savio3",
+            "ip": "10.0.8.16",
+            "trackers": [],
+            "action": null,
+            "state": "RUNNING",
+            "state_history": [
+                {
+                    "state": "RESERVED",
+                    "created_on": "2023-12-04T19:46:06.805456",
+                    "updated_on": "2023-12-04T19:46:06.805463",
+                    "reservation_id": "15578601"
+                },
+                {
+                    "state": "RUNNING",
+                    "created_on": "2023-12-04T19:46:17.725538",
+                    "updated_on": "2023-12-04T19:46:17.725545"
+                }
+            ],
+            "launch_id": 404927
+        }
+    ],
+    "state": "RUNNING",
+    "name": "ffopt_formed_water.xyz_wb97mv"
+}

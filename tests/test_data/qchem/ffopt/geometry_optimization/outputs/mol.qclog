@@ -1,0 +1,46 @@
+You are running Q-Chem version: 6.0.0
+withsave === 1
+
+#
+# job setting
+#
+local host:  nid005484
+current dir: /global/u1/r/rohith/atomate2_qchem_testing/block_2024-05-22-23-43-41-286528/launcher_2024-05-31-22-40-56-305331
+input file:  ./mol.qin
+output file: ./mol.qout
+nprocs     : 0
+nthreads   : 4
+#
+# qchem installation setting
+#
+QC:          /global/common/software/nersc9/qchem/6.0.0
+QCAUX:       /global/common/software/nersc9/qchem/6.0.0/qcaux
+QCPROG:      /global/common/software/nersc9/qchem/6.0.0/exe/qcprog.exe_s
+QCPROG_S:    /global/common/software/nersc9/qchem/6.0.0/exe/qcprog.exe_s
+PARALLEL:    -DSERIAL
+QCMPI:       
+#
+# qchem directory setting
+#
+qcrun:       scratch
+QCSCRATCH:   /global/u1/r/rohith/atomate2_qchem_testing/block_2024-05-22-23-43-41-286528/launcher_2024-05-31-22-40-56-305331
+QCLOCALSCR:  /tmp
+QCTMPDIR:    /tmp
+QCFILEPREF:  /tmp/scratch
+QCSAVEDIR:   /global/u1/r/rohith/atomate2_qchem_testing/block_2024-05-22-23-43-41-286528/launcher_2024-05-31-22-40-56-305331/scratch
+workdirs:    /tmp/scratch
+workdir0:    /tmp/scratch
+partmpdirs =  
+#
+# parallel setting
+#
+QCRSH:           ssh
+QCMPI:           mpich
+QCMPIRUN:        /global/common/software/nersc9/qchem/6.0.0/bin/mpi/mpirun_qchem
+QCMACHINEFILE:   /tmp/scratch/hostfile
+
+#
+# env setting
+#
+exported envs:   QC QCAUX QCSCRATCH QCRUNNAME QCFILEPREF QCPROG QCPROG_S GUIFILE
+copy savedir ...

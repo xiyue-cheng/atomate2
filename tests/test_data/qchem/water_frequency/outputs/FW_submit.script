@@ -1,0 +1,20 @@
+#!/bin/bash -l
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=40
+#SBATCH --qos=kpmol_savio3_normal
+#SBATCH --time=240:00:00
+#SBATCH --partition=savio3
+#SBATCH --account=co_kpmol
+#SBATCH --job-name=freq_water.xyz_wb97m
+#SBATCH --output=freq_water.xyz_wb97m-%j.out
+#SBATCH --error=freq_water.xyz_wb97m-%j.error
+
+
+conda activate rg_cup
+module load qchem/5.4.2
+
+cd /clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-12-01-05-49-04-146155/launcher_2024-01-08-19-21-55-440579
+rlaunch -w /global/home/users/rdguha/miniconda3/envs/rg_cup/config/my_fworker.yaml singleshot --fw_id 490855
+
+# CommonAdapter (SLURM) completed writing Template

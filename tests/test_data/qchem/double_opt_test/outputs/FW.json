@@ -1,0 +1,1021 @@
+{
+    "spec": {
+        "tags": {
+            "class": "Reduced_CIPs_for_BDE_in_G2",
+            "exec_clust": "savio"
+        },
+        "_tasks": [
+            {
+                "molecule": {
+                    "@module": "pymatgen.core.structure",
+                    "@class": "Molecule",
+                    "charge": 0.0,
+                    "spin_multiplicity": 2,
+                    "sites": [
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.8046,
+                                2.93416,
+                                -1.0958
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "S",
+                            "species": [
+                                {
+                                    "element": "S",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.77007,
+                                2.32787,
+                                -2.33996
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                0.5849,
+                                2.97731,
+                                -1.5068
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                0.33437,
+                                1.68242,
+                                -3.66217
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "F",
+                            "species": [
+                                {
+                                    "element": "F",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                1.33304,
+                                2.59235,
+                                -3.96822
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "F",
+                            "species": [
+                                {
+                                    "element": "F",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.39929,
+                                1.43269,
+                                -4.8096
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "F",
+                            "species": [
+                                {
+                                    "element": "F",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                0.89048,
+                                0.483,
+                                -3.25956
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.6109,
+                                3.29665,
+                                -3.4864
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "Mg",
+                            "species": [
+                                {
+                                    "element": "Mg",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -2.73213,
+                                1.52479,
+                                0.10735
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.94787,
+                                -1.03662,
+                                1.55692
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.56459,
+                                0.3303,
+                                1.44058
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -2.96801,
+                                0.87199,
+                                2.60006
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -2.93122,
+                                2.44512,
+                                2.50955
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.93871,
+                                0.46802,
+                                2.71198
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.56385,
+                                0.61461,
+                                3.50477
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -2.25834,
+                                2.97636,
+                                1.35487
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -2.51079,
+                                2.84966,
+                                3.45995
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.97811,
+                                2.80967,
+                                2.48119
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.86236,
+                                2.96467,
+                                1.60557
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.46867,
+                                1.93555,
+                                1.73859
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.60944,
+                                3.58759,
+                                2.49232
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.3276,
+                                3.44427,
+                                0.76722
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.47504,
+                                -1.08709,
+                                1.52224
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.56904,
+                                -1.5219,
+                                2.48615
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.53258,
+                                -1.64578,
+                                0.73439
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.93043,
+                                -2.42342,
+                                1.48627
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.78983,
+                                -0.53388,
+                                0.6139
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.87619,
+                                -0.56715,
+                                2.42073
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -7.26073,
+                                -2.43909,
+                                1.0075
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -7.63924,
+                                -3.48064,
+                                1.03384
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -7.31098,
+                                -2.1037,
+                                -0.05429
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -7.93249,
+                                -1.82529,
+                                1.64989
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.97552,
+                                -0.12327,
+                                -1.89483
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -2.9552,
+                                -0.19597,
+                                -0.92587
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.73335,
+                                -0.72772,
+                                -1.39449
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.6461,
+                                -0.45055,
+                                -0.34786
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.82721,
+                                -1.83053,
+                                -1.50282
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.44639,
+                                -0.28945,
+                                -2.37075
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                0.60087,
+                                -0.96161,
+                                -0.77663
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.92696,
+                                -0.92597,
+                                0.61719
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.60832,
+                                0.64649,
+                                -0.19654
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                1.64923,
+                                -0.16876,
+                                -0.2498
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                2.59993,
+                                -0.73417,
+                                -0.32355
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                1.50308,
+                                0.07465,
+                                0.82953
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                1.76453,
+                                0.76441,
+                                -0.84226
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -4.26517,
+                                1.33261,
+                                -2.23333
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -4.87913,
+                                -0.58315,
+                                -1.45078
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.76153,
+                                -0.69649,
+                                -2.82679
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -4.26647,
+                                2.145,
+                                -1.07312
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.20299,
+                                1.42589,
+                                -2.82933
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -3.46234,
+                                1.70188,
+                                -2.89296
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "C",
+                            "species": [
+                                {
+                                    "element": "C",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.50197,
+                                2.10082,
+                                -0.38401
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -6.19509,
+                                1.29806,
+                                -0.72189
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -6.01041,
+                                3.08074,
+                                -0.49361
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -5.31909,
+                                1.94704,
+                                0.69566
+                            ],
+                            "properties": {}
+                        }
+                    ]
+                },
+                "qchem_input_set": "OptSet",
+                "input_file": "mol.qin",
+                "qchem_input_params": {
+                    "dft_rung": 3,
+                    "basis_set": "def2-svpd",
+                    "pcm_dielectric": "7.29"
+                },
+                "_fw_name": "{{atomate.qchem.firetasks.write_inputs.WriteInputFromIOSet}}"
+            },
+            {
+                "qchem_cmd": ">>qchem_cmd<<",
+                "multimode": ">>multimode<<",
+                "input_file": "mol.qin",
+                "output_file": "mol.qout",
+                "max_cores": ">>max_cores<<",
+                "job_type": "opt_with_frequency_flattener",
+                "max_iterations": 10,
+                "max_molecule_perturb_scale": 0.3,
+                "linked": true,
+                "freq_before_opt": false,
+                "max_errors": 20,
+                "_fw_name": "{{atomate.qchem.firetasks.run_calc.RunQChemCustodian}}"
+            },
+            {
+                "db_file": ">>db_file<<",
+                "input_file": "mol.qin",
+                "output_file": "mol.qout",
+                "additional_fields": {
+                    "task_label": "Reduced_Mg_OTF_2_G2_CIP_in_G2_FFopt",
+                    "special_run_type": "frequency_flattener",
+                    "linked": true,
+                    "tags": {
+                        "class": "Reduced_CIPs_for_BDE_in_G2",
+                        "exec_clust": "savio"
+                    }
+                },
+                "_fw_name": "{{atomate.qchem.firetasks.parse_outputs.QChemToDb}}"
+            }
+        ]
+    },
+    "fw_id": 489911,
+    "created_on": "2023-10-05T23:30:10.095188",
+    "updated_on": "2023-10-09T22:24:51.647808",
+    "launches": [
+        {
+            "fworker": {
+                "name": "savio_fworker",
+                "category": "",
+                "query": "{\"spec.tags.exec_clust\": \"savio\"}",
+                "env": {
+                    "db_file": "/global/home/users/rdguha/miniconda3/envs/rg_cup/config/db.json",
+                    "calc_loc": "/tmp",
+                    "max_cores": 40,
+                    "qchem_cmd": "qchem",
+                    "feff_cmd": "feff",
+                    "multimode": "openmp"
+                }
+            },
+            "fw_id": 489911,
+            "launch_dir": "/clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-06-21-09-35-36-471166/launcher_2023-10-09-22-24-19-434590",
+            "host": "n0133.savio3",
+            "ip": "10.0.7.133",
+            "trackers": [],
+            "action": null,
+            "state": "RUNNING",
+            "state_history": [
+                {
+                    "state": "RESERVED",
+                    "created_on": "2023-10-09T22:24:19.363967",
+                    "updated_on": "2023-10-09T22:24:19.363971",
+                    "reservation_id": "15344258"
+                },
+                {
+                    "state": "RUNNING",
+                    "created_on": "2023-10-09T22:24:51.612596",
+                    "updated_on": "2023-10-09T22:24:51.612605"
+                }
+            ],
+            "launch_id": 206151
+        }
+    ],
+    "archived_launches": [
+        {
+            "fworker": {
+                "name": "savio_fworker",
+                "category": "",
+                "query": "{\"spec.tags.exec_clust\": \"savio\"}",
+                "env": {
+                    "db_file": "/global/home/users/rdguha/miniconda3/envs/rg_cup/config/db.json",
+                    "calc_loc": "/tmp",
+                    "max_cores": 40,
+                    "qchem_cmd": "qchem",
+                    "feff_cmd": "feff",
+                    "multimode": "openmp"
+                }
+            },
+            "fw_id": 489911,
+            "launch_dir": "/clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-06-21-09-35-36-471166/launcher_2023-10-05-23-30-13-494985",
+            "host": "n0151.savio3",
+            "ip": "10.0.7.151",
+            "trackers": [],
+            "action": null,
+            "state": "FIZZLED",
+            "state_history": [
+                {
+                    "state": "RESERVED",
+                    "created_on": "2023-10-05T23:30:13.428306",
+                    "updated_on": "2023-10-05T23:30:13.428313",
+                    "reservation_id": "15320923"
+                },
+                {
+                    "state": "RUNNING",
+                    "created_on": "2023-10-05T23:30:53.588490",
+                    "updated_on": "2023-10-07T22:30:54.468422",
+                    "checkpoint": {
+                        "_task_n": 1,
+                        "_all_stored_data": {},
+                        "_all_update_spec": {},
+                        "_all_mod_spec": []
+                    }
+                },
+                {
+                    "state": "FIZZLED",
+                    "created_on": "2023-10-09T22:11:44.780841",
+                    "checkpoint": {
+                        "_task_n": 1,
+                        "_all_stored_data": {},
+                        "_all_update_spec": {},
+                        "_all_mod_spec": []
+                    }
+                }
+            ],
+            "launch_id": 206123
+        },
+        {
+            "fworker": {
+                "name": "savio_fworker",
+                "category": "",
+                "query": "{\"spec.tags.exec_clust\": \"savio\"}",
+                "env": {
+                    "db_file": "/global/home/users/rdguha/miniconda3/envs/rg_cup/config/db.json",
+                    "calc_loc": "/tmp",
+                    "max_cores": 40,
+                    "qchem_cmd": "qchem",
+                    "feff_cmd": "feff",
+                    "multimode": "openmp"
+                }
+            },
+            "fw_id": 489911,
+            "launch_dir": "/clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-06-21-09-35-36-471166/launcher_2023-10-09-22-12-40-765264",
+            "host": "n0126.savio3",
+            "ip": "10.0.7.126",
+            "trackers": [],
+            "action": null,
+            "state": "RUNNING",
+            "state_history": [
+                {
+                    "state": "RESERVED",
+                    "created_on": "2023-10-09T22:12:40.697186",
+                    "updated_on": "2023-10-09T22:12:40.697192",
+                    "reservation_id": "15344191"
+                },
+                {
+                    "state": "RUNNING",
+                    "created_on": "2023-10-09T22:13:09.215065",
+                    "updated_on": "2023-10-09T22:13:09.639477",
+                    "checkpoint": {
+                        "_task_n": 1,
+                        "_all_stored_data": {},
+                        "_all_update_spec": {},
+                        "_all_mod_spec": []
+                    }
+                }
+            ],
+            "launch_id": 206145
+        }
+    ],
+    "state": "RUNNING",
+    "name": "Reduced_Mg_OTF_2_G2_CIP_in_G2_FFopt"
+}

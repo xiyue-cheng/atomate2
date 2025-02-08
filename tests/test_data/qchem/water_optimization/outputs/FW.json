@@ -1,0 +1,144 @@
+{
+    "spec": {
+        "tags": {
+            "class": "atomate2_test_opt",
+            "exec_clust": "savio"
+        },
+        "_tasks": [
+            {
+                "molecule": {
+                    "@module": "pymatgen.core.structure",
+                    "@class": "Molecule",
+                    "charge": 0.0,
+                    "spin_multiplicity": 1,
+                    "sites": [
+                        {
+                            "name": "O",
+                            "species": [
+                                {
+                                    "element": "O",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -0.80595,
+                                2.22952,
+                                -0.01914
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                0.18338,
+                                2.20176,
+                                0.01351
+                            ],
+                            "properties": {}
+                        },
+                        {
+                            "name": "H",
+                            "species": [
+                                {
+                                    "element": "H",
+                                    "occu": 1
+                                }
+                            ],
+                            "xyz": [
+                                -1.09531,
+                                1.61602,
+                                0.70231
+                            ],
+                            "properties": {}
+                        }
+                    ]
+                },
+                "qchem_input_set": "OptSet",
+                "input_file": "mol.qin",
+                "qchem_input_params": {
+                    "dft_rung": 4,
+                    "basis_set": "def2-qzvppd",
+                    "smd_solvent": "water",
+                    "overwrite_inputs": {
+                        "rem": {
+                            "method": "wb97mv"
+                        }
+                    }
+                },
+                "_fw_name": "{{atomate.qchem.firetasks.write_inputs.WriteInputFromIOSet}}"
+            },
+            {
+                "qchem_cmd": ">>qchem_cmd<<",
+                "multimode": ">>multimode<<",
+                "input_file": "mol.qin",
+                "output_file": "mol.qout",
+                "max_cores": ">>max_cores<<",
+                "max_errors": 20,
+                "job_type": "normal",
+                "_fw_name": "{{atomate.qchem.firetasks.run_calc.RunQChemCustodian}}"
+            },
+            {
+                "db_file": ">>db_file<<",
+                "input_file": "mol.qin",
+                "output_file": "mol.qout",
+                "additional_fields": {
+                    "task_label": "geom_opt_water.xyz_wb97mv",
+                    "tags": {
+                        "class": "atomate2_test_opt",
+                        "exec_clust": "savio"
+                    }
+                },
+                "_fw_name": "{{atomate.qchem.firetasks.parse_outputs.QChemToDb}}"
+            }
+        ]
+    },
+    "fw_id": 490854,
+    "created_on": "2024-01-08T19:19:06.189853",
+    "updated_on": "2024-01-08T19:20:00.481300",
+    "launches": [
+        {
+            "fworker": {
+                "name": "savio_fworker",
+                "category": "",
+                "query": "{\"spec.tags.exec_clust\": \"savio\"}",
+                "env": {
+                    "db_file": "/global/home/users/rdguha/miniconda3/envs/rg_cup/config/db.json",
+                    "calc_loc": "/tmp",
+                    "max_cores": 40,
+                    "qchem_cmd": "qchem",
+                    "feff_cmd": "feff",
+                    "multimode": "openmp"
+                }
+            },
+            "fw_id": 490854,
+            "launch_dir": "/clusterfs/cloudcuckoo/rdguha/md_for_xanes/xlinking_variation/C_edge/100_xlinked/block_2023-12-01-05-49-04-146155/launcher_2024-01-08-19-19-49-614591",
+            "host": "n0142.savio3",
+            "ip": "10.0.7.142",
+            "trackers": [],
+            "action": null,
+            "state": "RUNNING",
+            "state_history": [
+                {
+                    "state": "RESERVED",
+                    "created_on": "2024-01-08T19:19:49.564541",
+                    "updated_on": "2024-01-08T19:19:49.564546",
+                    "reservation_id": "15961825"
+                },
+                {
+                    "state": "RUNNING",
+                    "created_on": "2024-01-08T19:20:00.474433",
+                    "updated_on": "2024-01-08T19:20:00.474442"
+                }
+            ],
+            "launch_id": 405144
+        }
+    ],
+    "state": "RUNNING",
+    "name": "geom_opt_water.xyz_wb97mv"
+}
