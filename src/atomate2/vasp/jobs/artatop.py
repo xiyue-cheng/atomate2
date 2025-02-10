@@ -23,7 +23,7 @@ class LINMaker(Maker):
         self.input_handler: InputFileHandler  # Properly annotate the type
 
     @job
-    def make(self, prev_dir: Path | str, job_dir: Path | str) -> Response:
+    def make(self, prev_dir: Path | str) -> Response:
         """
         Run LIN (linear) calculations.
 
@@ -40,9 +40,9 @@ class LINMaker(Maker):
         A jobflow Response containing the output directory for the LIN calculation.
         """
         prev_dir = Path(prev_dir)
-        job_dir = Path(job_dir)
+        job_dir = Path.cwd()
 
-        out_lin = job_dir / "out_lin"
+        out_lin =     job_dir / "out_lin"
         out_lin.mkdir(parents=True, exist_ok=True)
 
         # Required files to copy from prev_dir
@@ -74,7 +74,7 @@ class NLINMaker(Maker):
         self.input_handler: InputFileHandler  # Properly annotate the type
 
     @job
-    def make(self, prev_dir: Path | str, job_dir: Path | str) -> Response:
+    def make(self, prev_dir: Path | str) -> Response:
         """
         Run NLIN (non-linear) calculations.
 
@@ -125,7 +125,7 @@ class ARTMaker(Maker):
         self.input_handler: InputFileHandler  # Properly annotate the type
 
     @job
-    def make(self, prev_dir: Path | str, job_dir: Path | str) -> Response:
+    def make(self, prev_dir: Path | str) -> Response:
         """
         Run ART calculations.
 
