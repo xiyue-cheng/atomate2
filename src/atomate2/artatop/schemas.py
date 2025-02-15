@@ -3,10 +3,25 @@
 import gzip
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 # TODO: remove this kludge when monty is fixed
+from monty.os.path import zpath as monty_zpath
 from pydantic import BaseModel, Field
+from atomate2 import SETTINGS, __version__
+import numpy as np
+from emmet.core.structure import StructureMetadata
+from monty.dev import requires
+from monty.json import MontyDecoder, jsanitize
+
+from pymatgen.core import Structure
+from typing_extensions import Self
+
+from atomate2.common.utils import (
+    parse_additional_json,
+    parse_custodian,
+    parse_transformations,
+)
 
 from atomate2.utils.datetime import datetime_str
 
@@ -140,10 +155,11 @@ class ArtatopOutputModel(BaseModel):
             json.dump(self.dict(), f, indent=4)
 
 
-class ArtatopTaskDocument(BaseModel):
+class ArtatopTaskDocument(StructureMetadata, extra="allow"):
     """Main schema for an ARTATOP task document."""
-
-    dir_name: str = Field(..., description="Directory containing ARTATOP outputs.")
+    structure: Structure = Field(description="The structure used in this task")
+    
+    dir_name: Union[str, Path] = Field(..., description="Directory containing ARTATOP outputs.")
     input_data: ArtatopInputModel = Field(
         ..., description="Input parameters for the ARTATOP computation."
     )
@@ -163,6 +179,7 @@ class ArtatopTaskDocument(BaseModel):
         cls,
         dir_name: str,
         input_file: str,
+        store_additional_json: bool = SETTINGS.ARTATOP_STORE_ADDITIONAL_JSON,
         additional_metadata: dict = None,
     ) -> "ArtatopTaskDocument":
         """Parse ARTATOP inputs and outputs, then construct the task document."""

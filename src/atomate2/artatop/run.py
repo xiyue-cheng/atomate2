@@ -40,7 +40,7 @@ class JobType(ValueEnum):
 
 
 def run_artatop(
-    job_type: JobType | str = JobType.DIRECT,
+    job_type: JobType | str = JobType.NORMAL,
     artatop_cmd: str = SETTINGS.ARTATOP_CMD,
     max_errors: int = SETTINGS.ARTATOP_CUSTODIAN_MAX_ERRORS,
     scratch_dir: str = SETTINGS.CUSTODIAN_SCRATCH_DIR,

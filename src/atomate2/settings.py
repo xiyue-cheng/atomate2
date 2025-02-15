@@ -122,6 +122,11 @@ class Atomate2Settings(BaseSettings):
     )
     ARTATOP_CUSTODIAN_MAX_ERRORS: int = Field(
         5, description="Maximum number of errors to correct before custodian gives up"
+    )     
+    ARTATOP_STORE_ADDITIONAL_JSON: bool = Field(
+        default=True,
+        description="Ingest any additional JSON data present into database when "
+        "parsing artatop directories useful for storing duplicate of FW.json",
     )
     LOBSTER_CMD: str = Field(
         default="lobster", description="Command to run standard version of VASP."

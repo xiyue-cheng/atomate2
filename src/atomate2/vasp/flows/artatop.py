@@ -37,10 +37,10 @@ class ArtatopWorkflowMaker(Maker):
     nlin_maker: Maker = NLINMaker()
     art_maker: Maker = ARTMaker()
 
-    def make(self, structure: Structure, job_dir: Path | str, prev_dir: Path | str = None) -> Flow:
+    def make(self, structure: Structure) -> Flow:
         """Create a unified workflow combining relaxation, optics, and ARTATOP."""
         # Step 1: Relaxation Flow
-        relax_flow = self.relax_maker.make(structure=structure, prev_dir=prev_dir)
+        relax_flow = self.relax_maker.make(structure=structure)
 
         # Step 2: Optics Flow
         optics_flow = self.optics_maker.make(
@@ -49,9 +49,9 @@ class ArtatopWorkflowMaker(Maker):
         )
 
         # Step 3: ARTATOP Jobs
-        lin_job = self.lin_maker.make(prev_dir=optics_flow.output.dir_name, job_dir=job_dir)
-        nlin_job = self.nlin_maker.make(prev_dir=optics_flow.output.dir_name, job_dir=job_dir)
-        art_job = self.art_maker.make(prev_dir=nlin_job.output["nlin_output"], job_dir=job_dir)
+        lin_job = self.lin_maker.make(prev_dir=optics_flow.output.dir_name)
+        nlin_job = self.nlin_maker.make(prev_dir=optics_flow.output.dir_name)
+        art_job = self.art_maker.make(prev_dir=nlin_job.output["nlin_output"])
 
         # Combine all into a single flow
         return Flow(
