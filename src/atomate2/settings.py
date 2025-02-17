@@ -121,8 +121,16 @@ class Atomate2Settings(BaseSettings):
         default="artatop", description="Command to run standard version of VASP."
     )
     ARTATOP_CUSTODIAN_MAX_ERRORS: int = Field(
-        5, description="Maximum number of errors to correct before custodian gives up"
+        5, description="Maximum number of errors to correct before custodian gives up"  
     )     
+    
+    ARTATOP_ZIP_FILES: Union[bool, Literal["atomate"]] = Field(
+        "atomate",
+        description="Determine if the files in folder are being compressed. If True "
+        "all the files are compressed. If 'atomate' only a selection of files related "
+        "to the simulation will be compressed. If False no file is compressed.",
+    )
+    
     ARTATOP_STORE_ADDITIONAL_JSON: bool = Field(
         default=True,
         description="Ingest any additional JSON data present into database when "

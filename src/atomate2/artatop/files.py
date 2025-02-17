@@ -11,22 +11,12 @@ from atomate2.utils.path import strip_hostname
 
 # Default file lists
 VASP_OUTPUT_FILES = [
-    "OUTCAR",
-    "vasprun.xml",
-    "CHG",
-    "CHGCAR",
-    "CONTCAR",
     "INCAR",
-    "KPOINTS",
-    "POSCAR",
-    "POTCAR",
-    "DOSCAR",
-    "EIGENVAL",
-    "IBZKPT",
-    "OSZICAR",
+    "vasprun.xml",
+    "PROCAR"
     "WAVECAR",
-    "XDATCAR",
     "OPTIC",
+    "WAVEDER",
 ]
 ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
 ARTATOP_OUTPUT_DIRS = ["out_lin", "out_nonlin"]
@@ -40,6 +30,7 @@ def copy_artatop_files(
     src_host: str | None = None,
     file_client: FileClient = None,
 ) -> None:
+    print(f"Original source directory: {src_dir}")  # Debugging
     """
     Copy VASP and ARTATOP files to the current directory.
 
@@ -57,10 +48,21 @@ def copy_artatop_files(
     file_client : FileClient
         A file client to use for performing file operations.
     """
-    src_dir = strip_hostname(src_dir)  # Handle hostnames properly.
+    
+     Force stripping hostname manually
+    if ":" in str(src_dir):
+        src_dir = str(src_dir).split(":", 1)[1]
+    print(f"Stripped source directory: {src_dir}")  # Debugging
 
-    logger.info(f"Copying VASP and ARTATOP inputs from {src_dir}")
+    # Ensure the path is absolute
+    src_dir = Path(src_dir).resolve()
+    print(f"Resolved source directory: {src_dir}")  # Debugging
+
+    if not src_dir.exists():
+        raise FileNotFoundError(f"Source directory does not exist: {src_dir}")
+
     directory_listing = file_client.listdir(src_dir, host=src_host)
+    print(f"Files in source directory: {directory_listing}")  # Debugging
 
     # Collect required files (VASP and ARTATOP)
     files = []

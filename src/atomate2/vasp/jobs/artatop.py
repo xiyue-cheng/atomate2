@@ -10,7 +10,9 @@ It includes:
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from jobflow import Maker, Response, job
 from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, ArtatopOutputModel
@@ -18,6 +20,8 @@ from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, Art
 from atomate2.artatop.run import run_artatop
 from atomate2.artatop.sets.core import InputFileHandler
 from atomate2.utils.path import strip_hostname
+from atomate2.artatop.jobs import ARTATOPMaker
+
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -74,7 +78,7 @@ class LINMaker(Maker):
 
         command = f"artatop < {input_lin} > {lin_output}"
         print(f"Running command: {command}")
-        run_artatop(job_type="NORMAL", artatop_cmd=command)
+        run_artatop(job_type="direct", artatop_cmd=command)
 
         # Double-check if lin_output exists after running the command
         if not lin_output.exists():
@@ -120,7 +124,7 @@ class NLINMaker(Maker):
 
         # Run ARTATOP NLIN calculation
         command = f"artatop < {input_nlin} > {nlin_output}"
-        run_artatop(job_type="NORMAL", artatop_cmd=command)
+        run_artatop(job_type="direct", artatop_cmd=command)
 
         # Return Response with output path
         return Response(output={"nlin_output": str(nlin_output)})
