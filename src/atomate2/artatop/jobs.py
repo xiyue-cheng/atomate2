@@ -9,6 +9,7 @@ from pathlib import Path
 from jobflow import Maker, job
 
 from atomate2 import SETTINGS
+from atomate2.common.files import gzip_output_folder
 from atomate2.artatop.files import (
     ARTATOP_OUTPUT_FILES,
     VASP_OUTPUT_FILES,
@@ -16,8 +17,6 @@ from atomate2.artatop.files import (
 )
 from atomate2.artatop.run import run_artatop
 from atomate2.artatop.schemas import ArtatopTaskDocument
-from atomate2.artatop.sets.core import InputFileHandler
-from atomate2.common.files import gzip_output_folder
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +53,13 @@ class ARTATOPMaker(Maker):
     custom_components: str | None = None
 
     @job(output_schema=ArtatopTaskDocument)
-    def make(self, optics_dir: str | Path) -> ArtatopTaskDocument:
+    def make(self, prev_dir: str | Path) -> ArtatopTaskDocument:
         """
         Run an ARTATOP calculation.
 
         Parameters
         ----------
-        vasp_dir : str or Path
+        prev_dir : str or Path
             Directory containing VASP outputs required for ARTATOP.
 
         Returns
@@ -68,8 +67,8 @@ class ARTATOPMaker(Maker):
         ArtatopTaskDocument
             Parsed results from ARTATOP calculations.
         """
-        # Copy required files (VASP + ARTATOP)
-        copy_artatop_files(optics_dir)
+        # Copy required files # VASP for example
+        copy_artatop_files(prev_dir)
 
         # Create input files for ARTATOP
         input_handler = InputFileHandler(output_dir="./artatop_outputs")

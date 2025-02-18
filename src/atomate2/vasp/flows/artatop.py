@@ -23,8 +23,8 @@ try:
     import ijson
 except ImportError:
     ijson = None
-if TYPE_CHECKING:
-    from pymatgen.core import Structure
+
+from pymatgen.core import Structure
 
 
 class ArtatopWorkflowMaker(Maker):

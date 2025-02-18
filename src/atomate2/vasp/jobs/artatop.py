@@ -45,44 +45,23 @@ class LINMaker(Maker):
         job_dir = Path.cwd()  # Get current working directory
  
         # Convert prev_dir to Path and ensure it's valid
-        prev_dir = Path(strip_hostname(prev_dir.split(":", 1)[-1]))  # Convert to Path
-        print(f"Previous directory: {prev_dir}")
-        if not prev_dir.exists():
-            raise FileNotFoundError(f"Previous directory does not exist: {prev_dir}")
+        prev_dir = Path(prev_dir)
         
         # Prepare output directory for lin calculations
         out_lin = job_dir / "out_lin"
         out_lin.mkdir(parents=True, exist_ok=True)  # Create the directory if it doesn't exist
         print(f"Output directory for lin calculations: {out_lin}")
         
-        # Check and copy required files from prev_dir to job_dir
-       # Required files to copy from prev_dir
-        required_files = ["INCAR.gz", "CONTCAR.gz", "OPTIC", "PROCAR.gz", "WAVEDER.gz"]
-        for file_name in required_files:
-            source_file = prev_dir / file_name
-            if not source_file.exists():
-                raise FileNotFoundError(
-                    f"Required file {file_name} not found in {prev_dir}."
-                )
-
         # Set input and output files
         input_lin = job_dir / "input_lin"
         lin_output = job_dir / "re_lin"
 
         # Ensure lin_output is valid and create necessary files
-        print(f"lin_output path: {lin_output}")
-        self.input_handler = InputFileHandler(
-            output_dir=str(out_lin)
-        )  # Convert Path to str
+        self.input_handler = InputFileHandler(output_dir=str(out_lin))
         self.input_handler.get_input_set("lin", job_dir)  # job_dir is already Path
 
         command = f"artatop < {input_lin} > {lin_output}"
-        print(f"Running command: {command}")
         run_artatop(job_type="direct", artatop_cmd=command)
-
-        # Double-check if lin_output exists after running the command
-        if not lin_output.exists():
-            raise FileNotFoundError(f"lin_output file was not generated: {lin_output}")
         
         # Return the response with lin_output
         return Response(output={"lin_output": str(lin_output)})
@@ -98,21 +77,11 @@ class NLINMaker(Maker):
         job_dir = Path.cwd()
 
         # Ensure prev_dir exists
-        prev_dir = Path(prev_dir.split(":", 1)[-1])  # Strips "cnodeXXXX:" if present
+        prev_dir = Path(prev_dir)
 
         # Define the ARTATOP-specific output directory
         out_nonlin = job_dir / "out_nonlin"
         out_nonlin.mkdir(parents=True, exist_ok=True)
-
-       # Required files to copy from prev_dir
-        required_files = ["INCAR.gz", "CONTCAR.gz", "OPTIC", "PROCAR.gz", "WAVEDER.gz"]
-        for file_name in required_files:
-            source_file = prev_dir / file_name
-            if not source_file.exists():
-                raise FileNotFoundError(
-                    f"Required file {file_name} not found in {prev_dir}."
-                )
-
 
         # Input and output files in job_dir
         input_nlin = job_dir / "input_nlin"
