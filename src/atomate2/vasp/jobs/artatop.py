@@ -61,7 +61,7 @@ class LINMaker(Maker):
         self.input_handler.get_input_set("lin", job_dir)  # job_dir is already Path
 
         command = f"artatop < {input_lin} > {lin_output}"
-        run_artatop(job_type="direct", artatop_cmd=command)
+        run_artatop(job_type="normal", artatop_cmd=command)
         
         # Return the response with lin_output
         return Response(output={"lin_output": str(lin_output)})
@@ -93,7 +93,7 @@ class NLINMaker(Maker):
 
         # Run ARTATOP NLIN calculation
         command = f"artatop < {input_nlin} > {nlin_output}"
-        run_artatop(job_type="direct", artatop_cmd=command)
+        run_artatop(job_type="normal", artatop_cmd=command)
 
         # Return Response with output path
         return Response(output={"nlin_output": str(nlin_output)})

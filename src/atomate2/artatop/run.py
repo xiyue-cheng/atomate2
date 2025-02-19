@@ -9,6 +9,7 @@ from os.path import expandvars
 from typing import TYPE_CHECKING, Any
 
 from custodian import Custodian
+from custodian.custodian import Validator  
 from custodian.artatop.handlers import ArtatopFilesValidator
 from custodian.artatop.jobs import ArtatopJob
 from jobflow.utils import ValueEnum
