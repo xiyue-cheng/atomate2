@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from atomate2.common.files import copy_files, get_zfile, gunzip_files
 from atomate2.utils.file_client import FileClient, auto_fileclient
 from atomate2.utils.path import strip_hostname
+if TYPE_CHECKING:
+    from pathlib import Path
 
-# Default file lists
 
 ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
 ARTATOP_OUTPUT_DIRS = ["out_lin", "out_nonlin"]
@@ -33,7 +34,7 @@ def copy_artatop_files(
     file_client: FileClient = None,
 ) -> None:
     """
-    Copy VASP and ARTATOP files to the current directory.
+    Copy ARTATOP files to the current directory.
 
     This function will gunzip any gzipped files.
 
@@ -56,7 +57,7 @@ def copy_artatop_files(
     directory_listing = file_client.listdir(src_dir, host=src_host)
 
 
-    # Collect required files (VASP and ARTATOP)
+    # Collect required files (VASP)
     files = []
     for file in VASP_OUTPUT_FILES:
         found_file = get_zfile(directory_listing, file, allow_missing=True)
