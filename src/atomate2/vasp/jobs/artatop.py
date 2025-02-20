@@ -6,10 +6,11 @@ It includes:
 - NLINMaker: For nonlinear optical response calculations.
 - ARTMaker: For atomic response calculations.
 """
+from __future__ import annotations
 import os
 import shutil
 from pathlib import Path
-from __future__ import annotations
+
 
 import logging
 
