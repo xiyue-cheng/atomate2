@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
-ARTATOP_OUTPUT_DIRS = ["out_lin", "out_nonlin"]
 
 VASP_OUTPUT_FILES = [
     "INCAR",
