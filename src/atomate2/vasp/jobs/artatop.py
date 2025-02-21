@@ -1,24 +1,33 @@
 """
-Module defining ARTATOP job makers.
+Module defines job makers for ARTATOP workflows.
 
 It includes:
 - LINMaker: For linear optical response calculations.
 - NLINMaker: For nonlinear optical response calculations.
 - ARTMaker: For atomic response calculations.
 """
-
 from __future__ import annotations
+import os
+import shutil
+from pathlib import Path
+
 
 import logging
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-from jobflow import Response, job
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+from jobflow import Maker, Response, job
+from atomate2.artatop.sets.core import InputFileHandler
+
 from atomate2.artatop.jobs import ARTATOPMaker
+from atomate2.utils.path import strip_hostname
+from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, ArtatopOutputModel
 
 if TYPE_CHECKING:
     from pathlib import Path
-
+    from pymatgen.core import Structure
+    from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
 
 
