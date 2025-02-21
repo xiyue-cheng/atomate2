@@ -51,6 +51,9 @@ class LINMaker(Maker):
         out_lin.mkdir(parents=True, exist_ok=True)  # Create the directory if it doesn't exist
         print(f"Output directory for lin calculations: {out_lin}")
         
+        input_lin = job_dir / "input_lin"
+        lin_output = job_dir / "re_lin"
+        
         # Return the response with lin_output
         return Response(output={"lin_output": str(lin_output)})
 
@@ -71,6 +74,10 @@ class NLINMaker(Maker):
         out_nonlin = job_dir / "out_nonlin"
         out_nonlin.mkdir(parents=True, exist_ok=True)
         
+        input_nlin = job_dir / "input_nlin"
+        nlin_output = job_dir / "re_nlin"
+
+        
         # Return Response with output path
         return Response(output={"nlin_output": str(nlin_output)})
 
@@ -86,5 +93,7 @@ class ARTMaker(Maker):
         prev_dir.mkdir(parents=True, exist_ok=True)
 
         job_dir = Path.cwd()  # Ensure job_dir is a Path
+        
+        art_output = prev_dir / "re_art"
 
         return {"art_output": str(art_output)}
