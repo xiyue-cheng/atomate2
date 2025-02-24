@@ -52,8 +52,8 @@ def get_lin_job(prev_dir: Path | str) -> Response:
     Response
         A response containing the ARTATOP LIN job.
     """
-    artatop_maker = ARTATOPMaker(job_type="lin")  # Create LIN job
-    lin_job = artatop_maker.make(prev_dir=prev_dir)  # Define execution
+    artatop_maker = ARTATOPMaker()  # Create LIN job
+    lin_job = artatop_maker.make(prev_dir=prev_dir, job_type="nlin")  # Define execution
     return Response(replace=lin_job)  # Return the LIN job
 
 
@@ -78,8 +78,8 @@ def get_nlin_job(prev_dir: Path | str) -> Response:
     Response
         A response containing the ARTATOP NLIN job.
     """
-    artatop_maker = ARTATOPMaker(job_type="nlin")  # Create NLIN job
-    nlin_job = artatop_maker.make(prev_dir=prev_dir)  # Define execution
+    artatop_maker = ARTATOPMaker()  # Create NLIN job
+    nlin_job = artatop_maker.make(prev_dir=prev_dir, job_type="nlin")  # Define execution
     return Response(replace=nlin_job)  # Return the NLIN job
 
 
@@ -104,6 +104,6 @@ def get_art_job(prev_dir: Path | str) -> Response:
     Response
         A response containing the ARTATOP ART job.
     """
-    artatop_maker = ARTATOPMaker(job_type="art")  # Create ART job
-    art_job = artatop_maker.make(prev_dir=prev_dir)  # Define execution
+    artatop_maker = ARTATOPMaker()  # Create ART job
+    art_job = artatop_maker.make(prev_dir=prev_dir, job_type="art")  # Define execution
     return Response(replace=art_job)  # Return the ART job

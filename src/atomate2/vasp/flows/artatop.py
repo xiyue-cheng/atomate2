@@ -16,9 +16,9 @@ from atomate2.common.files import copy_files
 
 from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
 from atomate2.vasp.jobs.artatop import (  # Assuming these are implemented as job makers
-    ARTMaker,
-    LINMaker,
-    NLINMaker,
+    get_lin_job,
+    get_nlin_job,
+    get_art_job,
 )
 
 try:
@@ -56,15 +56,9 @@ class ArtatopWorkflowMaker(Maker):
             prev_dir=relax_flow.output.dir_name,
         )
 
-        # Step 3: Copy Optics Outputs to Main Job Directory (job_dir)
-        job_dir = "{{optics_dir}}"
-
-        # Explicitly copy all relevant files from optics to job_dir
-        copy_files(src_dir=optics_flow.output.dir_name, dest_dir=Path.cwd())
-
         # Step 4: Define ARTATOP Jobs (LIN, NLIN, and ART)
-        lin_job = get_lin_job(prev_dir=job_dir)
-        nlin_job = get_nlin_job(prev_dir=job_dir)
+        lin_job = get_lin_job(prev_dir=optics_flow.output.dir_name)
+        nlin_job = get_nlin_job(prev_dir=optics_flow.output.dir_name)
         art_job = get_art_job(prev_dir=nlin_job.output["nlin_output"])
   
 
