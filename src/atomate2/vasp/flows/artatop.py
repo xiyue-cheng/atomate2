@@ -16,10 +16,11 @@ from atomate2.common.files import copy_files
 
 from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
 from atomate2.vasp.jobs.core import StaticMaker, NonSCFMaker
-from atomate2.artatop.artatop_jobs import (  # Assuming these are implemented as job makers
-    get_lin_job,
-    get_nlin_job,
-    get_art_job,
+from atomate2.artatop.jobs import ARTATOPMaker
+from atomate2.vasp.jobs.artatop import (  # Assuming these are implemented as job makers
+    get_lin_jobs,
+    get_nlin_jobs,
+    get_art_jobs
 )
 
 try:
