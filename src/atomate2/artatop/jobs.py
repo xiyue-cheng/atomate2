@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -10,6 +11,7 @@ from jobflow import Maker, job
 
 from atomate2 import SETTINGS
 from atomate2.common.files import gzip_output_folder
+from atomate2.artatop.sets.core import InputFileHandler
 from atomate2.artatop.files import (
     ARTATOP_OUTPUT_FILES,
     VASP_OUTPUT_FILES,
@@ -70,6 +72,15 @@ class ARTATOPMaker(Maker):
         ArtatopTaskDocument
             Parsed results from ARTATOP calculations.
         """
+        # Check if wavefunction_dir is provided
+        if not wavefunction_dir:
+            raise ValueError("wavefunction_dir is not provided or is invalid.")
+
+        # Validate required VASP output files in wavefunction_dir
+        validate_required_files(VASP_OUTPUT_FILES, Path(wavefunction_dir))
+        logger.info(f"All required files found in 'wavefunction_dir': {wavefunction_dir}")
+        
+        
         # Copy required files # VASP for example
         copy_artatop_files(wavefunction_dir)
 

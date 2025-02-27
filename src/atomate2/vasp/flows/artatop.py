@@ -15,7 +15,8 @@ from pymatgen.core import Structure
 from atomate2.common.files import copy_files
 
 from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
-from atomate2.vasp.jobs.artatop import (  # Assuming these are implemented as job makers
+from atomate2.vasp.jobs.core import StaticMaker, NonSCFMaker
+from atomate2.artatop.artatop_jobs import (  # Assuming these are implemented as job makers
     get_lin_job,
     get_nlin_job,
     get_art_job,
@@ -29,47 +30,40 @@ except ImportError:
 from pymatgen.core import Structure
 
 
-"""
-Flows for ARTATOP computations.
-
-This module provides a unified workflow for ARTATOP calculations combined
-with VASP workflows, including relaxation, optics, and ARTATOP jobs.
-"""
-
+if TYPE_CHECKING:
+    from pymatgen.core import Structure
 
 class ArtatopWorkflowMaker(Maker):
-    """Unified workflow maker for ARTATOP with VASP workflows."""
+    """Unified workflow for ARTATOP after VASP calculations."""
 
     name: str = "artatop_workflow"
     relax_maker: Maker = DoubleRelaxMaker()
-    optics_maker: Maker = OpticsMaker()
+    static_maker: Maker = StaticMaker()
+    optics_maker: Maker = NonSCFMaker()
+    artatop_maker: ARTATOPMaker = ARTATOPMaker()
 
     def make(self, structure: Structure, prev_dir: str | Path) -> Flow:
-        """Create a unified workflow combining relaxation, optics, and ARTATOP."""
-        
-        # Step 1: Relaxation Job
+        """Create a workflow combining VASP relaxation, optics, and ARTATOP."""
+
         relax_flow = self.relax_maker.make(structure=structure)
 
-        # Step 2: Optics Job (after relaxation)
-        optics_flow = self.optics_maker.make(
+        static_flow = self.static_maker.make(
             structure=relax_flow.output.structure,
             prev_dir=relax_flow.output.dir_name,
         )
 
-        # Step 4: Define ARTATOP Jobs (LIN, NLIN, and ART)
-        lin_job = get_lin_job(prev_dir=optics_flow.output.dir_name)
-        nlin_job = get_nlin_job(prev_dir=optics_flow.output.dir_name)
-        art_job = get_art_job(prev_dir=nlin_job.output["nlin_output"])
-  
+        optics_flow = self.optics_maker.make(
+            structure=static_flow.output.structure,
+            prev_dir=static_flow.output.dir_name,
+        )
 
-        # Combine all jobs into a single Flow
+        optics_dir = optics_flow.output.dir_name  # Correct NonSCF directory
+
+        lin_jobs = get_lin_jobs(self.artatop_maker, optics_dir)
+        nlin_jobs = get_nlin_jobs(self.artatop_maker, optics_dir)
+        art_jobs = get_art_jobs(self.artatop_maker, optics_dir)
+
         return Flow(
-            jobs=[
-                relax_flow,  # Unpack jobs from relax_flow
-                optics_flow,  # Unpack jobs from optics_flow
-                lin_job,
-                nlin_job,
-                art_job,
-            ],
-            output=art_job.output,
+            jobs=[relax_flow, static_flow, optics_flow, lin_jobs, nlin_jobs, art_jobs],
+            output=art_jobs.output,
         )
