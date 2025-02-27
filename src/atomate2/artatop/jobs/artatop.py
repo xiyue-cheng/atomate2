@@ -84,7 +84,7 @@ def get_artatop_optics(
     optics_maker = ArtatopOpticsMaker()
     optics_job = optics_maker.make(structure=structure, prev_dir=prev_dir)
 
-    return Response(output={"optics_dir": optics_job.output["optics_dir"]})
+    return Response(output={"optics_dir": optics_job.output.dir_name})
 
 
 @job

@@ -55,15 +55,15 @@ class ArtatopWorkflowMaker(Maker):
 
         # **Run ARTATOP Optics Job**
         optics_job = get_artatop_optics(
-            structure=static_flow.output.structure,
-            prev_dir=static_flow.output.dir_name,
+            structure=static_job.output.structure,
+            prev_dir=static_job.output.dir_name,
         )
 
-        optics_dir = optics_flow.output["optics_dir"]
+        optics_dir = optics_job.output["optics_dir"]
 
         # **Run ARTATOP Jobs**
         lin_jobs = get_lin_jobs(self.artatop_maker, optics_dir)
         nlin_jobs = get_nlin_jobs(self.artatop_maker, optics_dir)
         art_jobs = get_art_jobs(self.artatop_maker, optics_dir)
 
-        return Flow(jobs=[relax_flow, static_flow, optics_flow, lin_jobs, nlin_jobs, art_jobs], output=art_jobs.output)
+        return Flow(jobs=[relax_flow, static_job, optics_job, lin_jobs, nlin_jobs, art_jobs], output=art_jobs.output)
