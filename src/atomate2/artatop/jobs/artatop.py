@@ -123,7 +123,7 @@ def get_lin_jobs(
 
     artatop_maker = artatop_maker or ARTATOPMaker(calc_type="lin")
 
-    lin_job = artatop_maker.make(input_dir=optics_dir)
+    lin_job = artatop_maker.make(wavefunction_dir=optics_dir)
     lin_job.append_name("_lin_calculation")
 
     outputs["lin_dirs"].append(lin_job.output.dir_name)
@@ -169,7 +169,7 @@ def get_nlin_jobs(
 
     artatop_maker = artatop_maker or ARTATOPMaker(calc_type="nlin")
 
-    nlin_job = artatop_maker.make(input_dir=optics_dir)
+    nlin_job = artatop_maker.make(wavefunction_dir=optics_dir)
     nlin_job.append_name("_nlin_calculation")
 
     outputs["nlin_dirs"].append(nlin_job.output.dir_name)
@@ -221,7 +221,7 @@ def get_art_jobs(
 
     artatop_maker = artatop_maker or ARTATOPMaker(calc_type="art")
 
-    art_job = artatop_maker.make(input_dir=optics_dir)
+    art_job = artatop_maker.make(wavefunction_dir=optics_dir)
     art_job.append_name(f"_art_calculation_{highest_component}")
 
     outputs["art_dirs"].append(art_job.output.dir_name)
