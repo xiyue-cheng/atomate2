@@ -79,10 +79,12 @@ def get_artatop_optics(
     Response
         The directory containing the optics calculation results.
     """
+    prev_dir = Path(prev_dir)
+    optics_dir = Path.cwd()
     optics_maker = ArtatopOpticsMaker()
     optics_job = optics_maker.make(structure=structure, prev_dir=prev_dir)
 
-    return Response(output={"optics_dir": optics_job.output.dir_name})
+    return Response(output={"optics_dir": optics_job.output["optics_dir"]})
 
 
 @job

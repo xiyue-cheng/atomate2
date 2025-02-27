@@ -48,13 +48,13 @@ class ArtatopWorkflowMaker(Maker):
 
         relax_flow = self.relax_maker.make(structure=structure)
 
-        static_flow = self.static_maker.make(
+        static_job = self.static_maker.make(
             structure=relax_flow.output.structure,
             prev_dir=relax_flow.output.dir_name,
         )
 
         # **Run ARTATOP Optics Job**
-        optics_flow = get_artatop_optics(
+        optics_job = get_artatop_optics(
             structure=static_flow.output.structure,
             prev_dir=static_flow.output.dir_name,
         )
