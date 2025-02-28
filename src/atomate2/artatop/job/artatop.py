@@ -45,19 +45,21 @@ class ArtatopOpticsMaker(BaseVaspMaker):
 
     name: str = "artatop_optics_run"
     input_set_generator: NonSCFSetGenerator = field(
-    default_factory=lambda: NonSCFSetGenerator(
-        user_kpoints_settings={"reciprocal_density": 400},
-        user_incar_settings={
-            "LOPTICS": True,  # Optical calculations
-            "LWAVE": True,  # Save wavefunction for continuity
-            "ISYM": 2,  # Enable symmetry for better k-points
-            "NEDOS": 2000,  # Number of DOS points (explicitly set)
-            "ISMEAR": -5,  # Tetrahedron method (best for optics)
-            "NBANDS": 200,  # Sufficient number of bands
-            "ALGO": "Exact",  # High-precision algorithm
-            "EDIFF": 1e-6,  # Convergence threshold
-            "LREAL": False,  # No real-space projection (better accuracy)
-            "NCORE": 4,  # Parallelization setting
+        default_factory=lambda: NonSCFSetGenerator(
+            user_kpoints_settings={"reciprocal_density": 400},
+            user_incar_settings={
+                "LOPTICS": True,  
+                "LWAVE": True,  
+                "LCHARG": False,  
+                "ICHARG": 11,  
+                "ISMEAR": -5,  
+                "NEDOS": 2000,  
+                "NBANDS": 200,  
+                "ALGO": "Exact",  
+                "ISYM": 2,  
+                "EDIFF": 1e-6,  
+                "LREAL": False,  
+                "NCORE": 4,  
             },
         )
     )
