@@ -12,10 +12,12 @@ import shutil
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 from pathlib import Path
+from copy import deepcopy
 
 from jobflow import Flow, Response, job
 from atomate2.utils.path import strip_hostname
 from atomate2.vasp.jobs.base import BaseVaspMaker
+from atomate2.common.files import copy_files
 from atomate2.vasp.sets.core import NonSCFSetGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.artatop.sets.core import InputFileHandler
@@ -43,17 +45,19 @@ class ArtatopOpticsMaker(BaseVaspMaker):
 
     name: str = "artatop_optics_run"
     input_set_generator: NonSCFSetGenerator = field(
-        default_factory=lambda: NonSCFSetGenerator(
-            user_kpoints_settings={"reciprocal_density": 400},
-            user_incar_settings={
-                "LOPTICS": True,  # Optical calculations
-                "LWAVE": True,  # Save wavefunction
-                "ISYM": 0,  # No symmetry for accuracy
-                "NBANDS": 200,  # Sufficient bands
-                "ALGO": "Exact",
-                "EDIFF": 1e-6,
-                "LREAL": False,
-                "NCORE": 4,
+    default_factory=lambda: NonSCFSetGenerator(
+        user_kpoints_settings={"reciprocal_density": 400},
+        user_incar_settings={
+            "LOPTICS": True,  # Optical calculations
+            "LWAVE": True,  # Save wavefunction for continuity
+            "ISYM": 2,  # Enable symmetry for better k-points
+            "NEDOS": 2000,  # Number of DOS points (explicitly set)
+            "ISMEAR": -5,  # Tetrahedron method (best for optics)
+            "NBANDS": 200,  # Sufficient number of bands
+            "ALGO": "Exact",  # High-precision algorithm
+            "EDIFF": 1e-6,  # Convergence threshold
+            "LREAL": False,  # No real-space projection (better accuracy)
+            "NCORE": 4,  # Parallelization setting
             },
         )
     )

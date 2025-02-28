@@ -18,7 +18,7 @@ from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
 from atomate2.vasp.jobs.core import StaticMaker
 from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.artatop.job.artatop import (  # Assuming these are implemented as job makers
-    get_artatop_optics,
+    ArtatopOpticsMaker,
     get_lin_jobs,
     get_nlin_jobs,
     get_art_jobs
@@ -41,7 +41,7 @@ class ArtatopWorkflowMaker(Maker):
     name: str = "artatop_workflow"
     relax_maker: Maker = DoubleRelaxMaker()
     static_maker: Maker = StaticMaker()
-    optcis_maker: Maker = ArtatopOpticsMaker()
+    optics_maker: Maker = ArtatopOpticsMaker()
     artatop_maker: ARTATOPMaker = ARTATOPMaker()
 
     def make(self, structure: Structure, prev_dir: str | Path) -> Flow:
@@ -55,7 +55,7 @@ class ArtatopWorkflowMaker(Maker):
         )
 
         # **Run ARTATOP Optics Job**
-        optics_job = get_artatop_optics(
+        optics_job = self.optics_maker.make(
             structure=static_job.output.structure,
             prev_dir=static_job.output.dir_name,
         )
