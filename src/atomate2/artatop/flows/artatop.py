@@ -14,18 +14,10 @@ from jobflow import Flow, Maker
 from pymatgen.core import Structure
 from atomate2.common.files import copy_files
 
-from atomate2.vasp.jobs.core import StaticMaker, NonSCFMaker
-from atomate2.vasp.sets.core import NonSCFSetGenerator
-from atomate2.vasp.flows.core import DoubleRelaxMaker
+from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
 from atomate2.vasp.jobs.core import StaticMaker
 from atomate2.artatop.jobs import ARTATOPMaker
-from atomate2.artatop.job.artatop import (  # Assuming these are implemented as job makers
-    ARTATOPStaticMaker,
-    ARTATOPOpticsMaker,
-    get_lin_jobs,
-    get_nlin_jobs,
-    get_art_jobs
-)
+from atomate2.artatop.job.artatop import get_artatop_jobs
 
 try:
     import ijson
@@ -34,39 +26,30 @@ except ImportError:
 
 from pymatgen.core import Structure
 
-
 class ArtatopWorkflowMaker(Maker):
-    """Workflow to run ARTATOP after a full VASP calculation sequence."""
+    """Workflow to run ARTATOP after a full VASP double relaxation and optics calculation."""
 
     name: str = "artatop_workflow"
-    relax_maker: Maker = DoubleRelaxMaker()
-    static_maker: Maker = ARTATOPStaticMaker()
-    optics_maker: Maker = ARTATOPOpticsMaker()
+    relax_maker: Maker = DoubleRelaxMaker()  
+    optics_maker: Maker = OpticsMaker()
 
     def make(self, structure: Structure, prev_dir: str | Path) -> Flow:
-        """Create a full ARTATOP workflow including VASP calculations."""
+        """Create a full ARTATOP workflow including relaxation, optics, and ARTATOP jobs."""
 
+        
+        # Step 1: Relaxation Job
         relax_flow = self.relax_maker.make(structure=structure)
-        relax_flow.append_name("_relax")
 
-        static_job = self.static_maker.make(
+        # Step 2: Optics Job (after relaxation)
+        optics_flow = self.optics_maker.make(
             structure=relax_flow.output.structure,
             prev_dir=relax_flow.output.dir_name,
         )
-        static_job.append_name("_static")
 
-        # **Run ARTATOP Optics Job**
-        optics_job = self.optics_maker.make(
-            structure=static_job.output.structure,
-            prev_dir=static_job.output.dir_name,
+        artatop_jobs = get_artatop_jobs(optics_flow.output)
+
+        # **4. Return the Final Flow**
+        return Flow(
+            jobs=[relax_flow, optics_flow, artatop_jobs],
+            output=artatop_jobs.output
         )
-        optics_job.append_name("_optics")
-
-        optics_dir = optics_job.output.dir_name
-
-        # **Run ARTATOP Jobs**
-        lin_jobs = get_lin_jobs(optics_dir)
-        nlin_jobs = get_nlin_jobs(optics_dir)
-        art_jobs = get_art_jobs(optics_dir)
-
-        return Flow(jobs=[relax_flow, static_job, optics_job, lin_jobs, nlin_jobs, art_jobs], output=art_jobs.output)
