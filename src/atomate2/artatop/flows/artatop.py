@@ -45,8 +45,10 @@ class ArtatopWorkflowMaker(Maker):
             structure=relax_flow.output.structure,
             prev_dir=relax_flow.output.dir_name,
         )
-
-        artatop_jobs = get_artatop_jobs(optics_flow.output)
+        
+        print('hello')
+        print(dir(optics_flow))
+        artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
 
         # **4. Return the Final Flow**
         return Flow(

@@ -66,7 +66,7 @@ def get_artatop_jobs(
         input_handler.get_input_set(calc_type, optics_job_output)
 
         # Pass `optics_job_output` as the dynamically resolved wavefunction_dir
-        artatop_job = artatop_maker.make(wavefunction_dir=optics_job_output, calc_type=calc_type)
+        artatop_job = artatop_maker.make(wavefunction_dir=optics_flow.output.dir_name, calc_type=calc_type)
         artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
 
         # Store job details
