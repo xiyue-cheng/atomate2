@@ -18,7 +18,7 @@ from jobflow import Flow, Response, job
 from atomate2.utils.path import strip_hostname
 from atomate2.vasp.jobs.base import BaseVaspMaker
 from atomate2.common.files import copy_files
-from atomate2.vasp.sets.core import NonSCFSetGenerator
+from atomate2.vasp.sets.core import VaspInputGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.artatop.sets.core import InputFileHandler
 
@@ -28,45 +28,32 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class ArtatopOpticsMaker(BaseVaspMaker):
+class ARTATOPStaticMaker(BaseVaspMaker):
     """
-    Maker that performs a VASP NonSCF computation with settings required for ARTATOP.
-
-    This is equivalent to `LobsterStaticMaker` but tailored for ARTATOP.
-
-    Parameters
-    ----------
-    name : str
-        The job name.
-    input_set_generator : NonSCFSetGenerator
-        A generator used to make the input set.
+    Maker for performing a static calculation required for ARTATOP.
+    Uses default settings unless overridden.
     """
-
-    name: str = "artatop_optics_run"
-    input_set_generator: NonSCFSetGenerator = field(
-        default_factory=lambda: NonSCFSetGenerator(
-            user_kpoints_settings={"reciprocal_density": 400},
-            user_incar_settings={
-                "LOPTICS": True,  
-                "LWAVE": True,  
-                "LCHARG": False,  
-                "ICHARG": 11,  
-                "ISMEAR": -5,  
-                "NEDOS": 2000,  
-                "NBANDS": 200,  
-                "ALGO": "Exact",  
-                "ISYM": 2,  
-                "EDIFF": 1e-6,  
-                "LREAL": False,  
-                "NCORE": 4,  
-            },
-        )
-    )
-
+    name: str = "artatop_static"
+    input_set_generator: VaspInputGenerator = field(default_factory=VaspInputGenerator)
 
 @job
-def get_artatop_optics(
+def run_artatop_static(structure: Structure) -> Response:
+    """
+    Run the static calculation required for ARTATOP without explicitly providing an INCAR.
+    """
+    static_maker = ARTATOPStaticMaker()
+    static_job = static_maker.make(structure=structure)
+    return static_job
+
+class ARTATOPOpticsMaker(BaseVaspMaker):
+    """
+    Maker for performing an optics calculation required for ARTATOP.
+    """
+    name: str = "optics"
+    input_set_generator: VaspInputGenerator = field(default_factory=VaspInputGenerator)
+
+@job
+def run_artatop_optics(
     structure: Structure,
     prev_dir: Path | str,
 ) -> Response:
@@ -86,9 +73,11 @@ def get_artatop_optics(
         The directory containing the optics calculation results.
     """
     prev_dir = Path(prev_dir)
-    optics_dir = Path.cwd()
+    optics_maker = ARTATOPOpticsMaker()
+    
     optics_maker = ArtatopOpticsMaker()
     optics_job = optics_maker.make(structure=structure, prev_dir=prev_dir)
+    optics_job.append_name("_optics")
 
     return Response(output={"optics_dir": optics_job.output.dir_name})
 
