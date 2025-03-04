@@ -48,17 +48,16 @@ class ArtatopWorkflowMaker(Maker):
         )
         
 
-        print('hello')
-        print(dir(optics_flow))
+        
+        print(dir(optics_flow.output.dir_name))
         artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
         @job
         def run_artatop_jobs(optics_output):
             """Runs ARTATOP jobs after optics completes."""
-            opics_output_path = str(optics_output)
             return get_artatop_jobs(optics_output)
 
 
-        artatop_jobs = get_artatop_jobs(optics_flow.output)
+        artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
 
         # **4. Return the Final Flow**
         return Flow(
