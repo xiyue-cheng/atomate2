@@ -46,25 +46,8 @@ class ArtatopWorkflowMaker(Maker):
             structure=relax_flow.output.structure,
             prev_dir=relax_flow.output.dir_name,
         )
-        
-<<<<<<< HEAD
-
-        
-        print(dir(optics_flow.output.dir_name))
-        artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
-        @job
-        def run_artatop_jobs(optics_output):
-            """Runs ARTATOP jobs after optics completes."""
-            return get_artatop_jobs(optics_output)
-
-
-        artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
-=======
-
-        
-        print(f"Optics output directory: {optics_flow.output.dir_name}")
-        artatop_jobs = get_artatop_jobs(None, optics_flow.output.dir_name)
->>>>>>> 450a6535 (copying files)
+        print(f"Optics output refernce: {optics_flow.output}")
+        artatop_jobs = get_artatop_jobs(None, {"dir_name": optics_flow.output.dir_name)
 
         # **4. Return the Final Flow**
         return Flow(
