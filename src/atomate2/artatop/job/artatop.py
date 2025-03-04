@@ -21,8 +21,10 @@ from jobflow import Maker, Response, job
 from atomate2.artatop.sets.core import InputFileHandler
 from atomate2.common.files import copy_files
 
-from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.utils.path import strip_hostname
+from atomate2.vasp.jobs.base import BaseVaspMaker
+from atomate2.vasp.sets.core import OpticsSetGenerator
+from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, ArtatopOutputModel
 
 if TYPE_CHECKING:
@@ -31,48 +33,116 @@ if TYPE_CHECKING:
     from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
 
-@job
-def get_artatop_jobs(
-    artatop_maker: ARTATOPMaker | None,
-    optics_job_output,  # This will dynamically resolve to the actual optics directory
-) -> Response:
+"""Module defining ARTATOP jobs."""
+
+from __future__ import annotations
+
+import logging
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
+
+from jobflow import Flow, Response, job
+
+
+from atomate2.utils.path import strip_hostname
+from atomate2.vasp.jobs.base import BaseVaspMaker
+from atomate2.vasp.sets.core import OpticsSetGenerator
+from atomate2.artatop.jobs import ARTATOPMaker  # Assuming ARTATOPMaker exists
+
+if TYPE_CHECKING:
+    from pathlib import Path
+    from pymatgen.core import Structure
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class OpticsStaticMaker(BaseVaspMaker):
     """
-    Create a list of ARTATOP jobs (LIN, NLIN, ART) dynamically.
+    Maker that performs a VASP optics computation required for ARTATOP.
+
+    This runs:
+    1. A static calculation
+    2. A non-self-consistent optics calculation (LOPTICS=True)
 
     Parameters
     ----------
-    artatop_maker : ARTATOPMaker or None
-        Maker for the ARTATOP jobs.
-    optics_job_output : JobFlow Output Reference
-        The output reference from OpticsMaker, which resolves to the actual optics directory.
+    name : str
+        The job name.
+    input_set_generator : .VaspInputGenerator
+        A generator used to make the input set.
+    """
+
+    name: str = "optics_run"
+    input_set_generator: OpticsSetGenerator = field(
+        default_factory=lambda: OpticsSetGenerator(optics=True)
+    )
+
+
+@job
+def get_artatop_jobs(
+    artatop_maker: ARTATOPMaker,
+    optics_dir: Path | str,
+    optics_uuid: str,
+) -> Response:
+    """
+    Create ARTATOP jobs.
+
+    Parameters
+    ----------
+    artatop_maker : .ARTATOPMaker
+        Maker for ARTATOP jobs.
+    optics_dir : Path or str
+        Path to the optics VASP calculation containing WAVEDER and OPTICS files.
+    optics_uuid : str
+        UUID of the optics calculation.
 
     Returns
     -------
     Response
-        A response containing the ARTATOP jobs.
+        Flow of ARTATOP jobs.
     """
     jobs = []
-    outputs = {
-        "optics_dir": optics_job_output,  # Store resolved optics_dir
+    outputs: dict[str, Any] = {
+        "optics_dir": optics_dir,
+        "optics_uuid": optics_uuid,
+        "artatop_uuids": [],
         "artatop_dirs": [],
         "artatop_task_documents": [],
     }
 
-    artatop_maker = artatop_maker or ARTATOPMaker()
+    artatop_job = artatop_maker.make(wavefunction_dir=optics_dir)
+    artatop_job.append_name("_artatop")
+    outputs["artatop_uuids"].append(artatop_job.output.uuid)
+    outputs["artatop_dirs"].append(artatop_job.output.dir_name)
+    outputs["artatop_task_documents"].append(artatop_job.output)
+    jobs.append(artatop_job)
 
-    # Loop over ARTATOP calculation types (LIN, NLIN, ART)
-    for idx, calc_type in enumerate(["lin", "nlin", "art"]):
-        input_handler = InputFileHandler(output_dir=optics_job_output)
-        input_handler.get_input_set(calc_type, optics_job_output)
+    flow = Flow(jobs, output=outputs)
+    return Response(replace=flow)
 
-        # Pass `optics_job_output` as the dynamically resolved wavefunction_dir
-        artatop_job = artatop_maker.make(wavefunction_dir=optics_flow.output, calc_type=calc_type)
-        artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
 
-        # Store job details
-        outputs["artatop_dirs"].append(artatop_job.output.dir_name)
-        outputs["artatop_task_documents"].append(artatop_job.output)
-        jobs.append(artatop_job)
+@job
+def delete_artatop_waveder(
+    dirs: list[Path | str],
+    optics_dir: Path | str = None,
+) -> None:
+    """
+    Delete WAVEDER files after ARTATOP run.
 
-    # Return all jobs as a Flow
-    return Response(replace=Flow(jobs, output=outputs))
+    Parameters
+    ----------
+    dirs : list of path or str
+        Path to directories of ARTATOP jobs.
+    optics_dir : Path or str
+        Path to directory of optics VASP run.
+    """
+    if optics_dir:
+        dirs.append(optics_dir)
+
+    for dir_name in dirs:
+        delete_files(
+            strip_hostname(dir_name),
+            include_files=["WAVEDER", "WAVEDER.gz", "OPTICS"],
+            allow_missing=True,
+        )

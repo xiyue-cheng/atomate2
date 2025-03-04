@@ -64,17 +64,12 @@ class ARTATOPMaker(Maker):
 
         Parameters
         ----------
-        prev_dir : str or Path
-            Directory containing VASP outputs required for ARTATOP.
-
-        Returns
+        wavefunction_dir : str or Path
+            A directory containing a WAVEFUNCTION and other outputs needed for Lobster
         -------
         ArtatopTaskDocument
             Parsed results from ARTATOP calculations.
         """
-        # Check if wavefunction_dir is provided
-        if not wavefunction_dir:
-            raise ValueError("wavefunction_dir is not provided or is invalid.")
 
         # Validate required VASP output files in wavefunction_dir
         validate_required_files(VASP_OUTPUT_FILES, Path(wavefunction_dir))
