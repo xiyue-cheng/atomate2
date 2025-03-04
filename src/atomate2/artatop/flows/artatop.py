@@ -39,6 +39,7 @@ class ArtatopWorkflowMaker(Maker):
         
         # Step 1: Relaxation Job
         relax_flow = self.relax_maker.make(structure=structure)
+        relax_dir = relax_job.output.dir_name
 
         # Step 2: Optics Job (after relaxation)
         optics_flow = self.optics_maker.make(
@@ -46,9 +47,19 @@ class ArtatopWorkflowMaker(Maker):
             prev_dir=relax_flow.output.dir_name,
         )
         
+<<<<<<< HEAD
         print('hello')
         print(dir(optics_flow))
         artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
+=======
+        @job
+        def run_artatop_jobs(optics_output):
+            """Runs ARTATOP jobs after optics completes."""
+            return get_artatop_jobs(optics_output)
+
+
+        artatop_jobs = get_artatop_jobs(optics_flow.output)
+>>>>>>> 93df4c81 (copying files)
 
         # **4. Return the Final Flow**
         return Flow(
