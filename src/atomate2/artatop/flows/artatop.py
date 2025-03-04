@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from pathlib import Path
 
-from jobflow import Flow, Maker, job
+from jobflow import Flow, Maker
 from pymatgen.core import Structure
 from atomate2.common.files import copy_files
 
@@ -39,15 +39,25 @@ class ArtatopWorkflowMaker(Maker):
         
         # Step 1: Relaxation Job
         relax_flow = self.relax_maker.make(structure=structure)
-        relax_dir = relax_flow.output.dir_name
+        relax_dir = relax_job.output.dir_name
 
         # Step 2: Optics Job (after relaxation)
         optics_flow = self.optics_maker.make(
             structure=relax_flow.output.structure,
             prev_dir=relax_flow.output.dir_name,
         )
-        print(f"Optics output refernce: {optics_flow.output}")
-        artatop_jobs = get_artatop_jobs(None, {"dir_name": optics_flow.output.dir_name)
+        
+
+        
+        print(dir(optics_flow.output.dir_name))
+        artatop_jobs = get_artatop_jobs(optics_flow.output.dir_name)
+        @job
+        def run_artatop_jobs(optics_output):
+            """Runs ARTATOP jobs after optics completes."""
+            return get_artatop_jobs(optics_output)
+
+
+        artatop_jobs = get_artatop_jobs(optics_flow.output)
 
         # **4. Return the Final Flow**
         return Flow(

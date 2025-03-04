@@ -51,13 +51,9 @@ def get_artatop_jobs(
     Response
         A response containing the ARTATOP jobs.
     """
-    if isinstance(optics_job_output, dict) and "dir_name" in optics_job_output:
-        optics_dir = optics_job_output["dir_name"]  # Extract the actual path
-    else:
-        optics_dir = optics_job_output  # Assume it's already a string path
     jobs = []
     outputs = {
-        "optics_dir": optics_dir,  # Store resolved optics_dir
+        "optics_dir": optics_job_output,  # Store resolved optics_dir
         "artatop_dirs": [],
         "artatop_task_documents": [],
     }
@@ -66,11 +62,11 @@ def get_artatop_jobs(
 
     # Loop over ARTATOP calculation types (LIN, NLIN, ART)
     for idx, calc_type in enumerate(["lin", "nlin", "art"]):
-        input_handler = InputFileHandler(output_dir=outputs["optics_dir"])
-        input_handler.get_input_set(calc_type, outputs["optics_dir"])
+        input_handler = InputFileHandler(output_dir=optics_job_output)
+        input_handler.get_input_set(calc_type, optics_job_output)
 
         # Pass `optics_job_output` as the dynamically resolved wavefunction_dir
-        artatop_job = artatop_maker.make(wavefunction_dir=outputs["optics_dir"], calc_type=calc_type)
+        artatop_job = artatop_maker.make(wavefunction_dir=optics_flow.output, calc_type=calc_type)
         artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
 
         # Store job details
