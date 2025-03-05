@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class OpticsStaticMaker(BaseVaspMaker):
+class ArtatopOpticsMaker(BaseVaspMaker):
     """
     Maker that performs a VASP optics computation requirNonSCFSetGeneratored for ARTATOP.
 
@@ -56,45 +56,48 @@ class OpticsStaticMaker(BaseVaspMaker):
         default_factory=lambda: OpticsSetGenerator(optics=True)
     )
 
-
 @job
 def get_artatop_jobs(
-    artatop_maker: ARTATOPMaker,
-    optics_dir: Path | str,
-    optics_uuid: str,
+    optics_job_output,  # This will dynamically resolve to the actual optics directory
+    artatop_maker: ARTATOPMaker | None = None,
 ) -> Response:
     """
-    Create ARTATOP jobs.
-NonSCFSetGenerator
+    Create a list of ARTATOP jobs (LIN, NLIN, ART) dynamically.
+
     Parameters
     ----------
-    artatop_maker : .ARTATOPMaker
-        Maker for ARTATOP jobs.
-    optics_dir : Path or str
-        Path to the optics VASP calculation containing WAVEDER and OPTICS files.
-    optics_uuid : str
-        UUID of the optics calculation.
+    optics_job_output : JobFlow Output Reference
+        The output reference from OpticsMaker, which resolves to the actual optics directory.
+    artatop_maker : ARTATOPMaker or None
+        Maker for the ARTATOP jobs.
 
     Returns
     -------
     Response
-        Flow of ARTATOP jobs.
+        A response containing the ARTATOP jobs.
     """
     jobs = []
-    outputs: dict[str, Any] = {
-        "optics_dir": optics_dir,
-        "optics_uuid": optics_uuid,
-        "artatop_uuids": [],
+    outputs = {
+        "optics_dir": optics_job_output,  # Store resolved optics_dir
         "artatop_dirs": [],
         "artatop_task_documents": [],
     }
 
-    artatop_job = artatop_maker.make(wavefunction_dir=optics_dir)
-    artatop_job.append_name("_artatop")
-    outputs["artatop_uuids"].append(artatop_job.output.uuid)
-    outputs["artatop_dirs"].append(artatop_job.output.dir_name)
-    outputs["artatop_task_documents"].append(artatop_job.output)
-    jobs.append(artatop_job)
+    artatop_maker = artatop_maker or ARTATOPMaker()
 
-    flow = Flow(jobs, output=outputs)
-    return Response(replace=flow)
+    # Loop over ARTATOP calculation types (LIN, NLIN, ART)
+    for idx, calc_type in enumerate(["lin", "nlin", "art"]):
+        input_handler = InputFileHandler(output_dir=optics_job_output)
+        input_handler.get_input_set(calc_type, optics_job_output)
+
+        # Pass `optics_job_output` as the dynamically resolved wavefunction_dir
+        artatop_job = artatop_maker.make(wavefunction_dir=optics_job_output, calc_type=calc_type)
+        artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
+
+        # Store job details
+        outputs["artatop_dirs"].append(artatop_job.output.dir_name)
+        outputs["artatop_task_documents"].append(artatop_job.output)
+        jobs.append(artatop_job)
+
+    # Return all jobs as a Flow
+    return Response(replace=Flow(jobs, output=outputs))
