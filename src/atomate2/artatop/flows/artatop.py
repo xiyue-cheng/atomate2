@@ -84,6 +84,7 @@ class VaspARTATOPMaker(Maker):
         # 1. Double relaxation
         relax_flow = self.relax_maker.make(structure=structure)
         relax_dir = relax_flow.output.dir_name
+        prev_dir = relax_dir
         
         # 2. Static calculation
         static_job = self.static_maker.make(structure, prev_dir=prev_dir)
