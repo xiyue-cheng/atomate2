@@ -6,7 +6,7 @@ with VASP workflows, including relaxation, optics, and ARTATOP jobs.
 """
 
 from __future__ import annotations
-
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 from pathlib import Path
 
@@ -59,14 +59,15 @@ class VaspARTATOPMaker(Maker):
     """
 
     name: str = "artatop"
-    relax_maker: BaseVaspMaker = field(default_factory=lambda: DoubleRelaxMaker())
+    relax_maker: BaseVaspMaker | None = field(
+        default_factory=lambda: DoubleRelaxMaker.from_relax_maker(RelaxMaker())
+    )
     static_maker: BaseVaspMaker = field(default_factory=lambda: StaticMaker())
     optics_maker: BaseVaspMaker = field(default_factory=lambda: NonSCFMaker(
         name="optics",
         input_set_generator=NonSCFSetGenerator(optics=True),
     ))
     artatop_maker: ARTATOPMaker = field(default_factory=ARTATOPMaker)
-    delete_waveders: bool = True
 
     def make(self, structure: Structure, prev_dir: str | Path | None = None) -> Flow:
         """Make flow to calculate optical properties with ARTATOP.
@@ -81,12 +82,9 @@ class VaspARTATOPMaker(Maker):
         jobs = []
 
         # 1. Double relaxation
-        relax_job = self.relax_maker.make(structure, prev_dir=prev_dir)
-        jobs.append(relax_job)
-        structure = relax_job.output.structure
-        relax_dir = relax_job.output.dir_name
-        prev_dir = relax_dir
-
+        relax_flow = self.relax_maker.make(structure=structure)
+        relax_dir = relax_flow.output.dir_name
+        
         # 2. Static calculation
         static_job = self.static_maker.make(structure, prev_dir=prev_dir)
         jobs.append(static_job)
@@ -106,13 +104,5 @@ class VaspARTATOPMaker(Maker):
             optics_uuid=optics_uuid,
         )
         jobs.append(artatop_jobs)
-
-        # Delete WAVEDER files after ARTATOP run
-        if self.delete_waveders:
-            delete_waveders = delete_artatop_waveder(
-                dirs=artatop_jobs.output["artatop_dirs"],
-                optics_dir=optics_dir,
-            )
-            jobs.append(delete_waveders)
 
         return Flow(jobs, output=artatop_jobs.output)

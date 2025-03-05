@@ -17,13 +17,13 @@ import logging
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from jobflow import Maker, Response, job
+from jobflow import Maker, Response, job, Flow
 from atomate2.artatop.sets.core import InputFileHandler
 from atomate2.common.files import copy_files
 
 from atomate2.utils.path import strip_hostname
 from atomate2.vasp.jobs.base import BaseVaspMaker
-from atomate2.vasp.sets.core import OpticsSetGenerator
+from atomate2.vasp.sets.core import NonSCFSetGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, ArtatopOutputModel
 
@@ -33,33 +33,11 @@ if TYPE_CHECKING:
     from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
 
-"""Module defining ARTATOP jobs."""
-
-from __future__ import annotations
-
-import logging
-from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-
-from jobflow import Flow, Response, job
-
-
-from atomate2.utils.path import strip_hostname
-from atomate2.vasp.jobs.base import BaseVaspMaker
-from atomate2.vasp.sets.core import OpticsSetGenerator
-from atomate2.artatop.jobs import ARTATOPMaker  # Assuming ARTATOPMaker exists
-
-if TYPE_CHECKING:
-    from pathlib import Path
-    from pymatgen.core import Structure
-
-logger = logging.getLogger(__name__)
-
 
 @dataclass
 class OpticsStaticMaker(BaseVaspMaker):
     """
-    Maker that performs a VASP optics computation required for ARTATOP.
+    Maker that performs a VASP optics computation requirNonSCFSetGeneratored for ARTATOP.
 
     This runs:
     1. A static calculation
@@ -87,7 +65,7 @@ def get_artatop_jobs(
 ) -> Response:
     """
     Create ARTATOP jobs.
-
+NonSCFSetGenerator
     Parameters
     ----------
     artatop_maker : .ARTATOPMaker
@@ -120,29 +98,3 @@ def get_artatop_jobs(
 
     flow = Flow(jobs, output=outputs)
     return Response(replace=flow)
-
-
-@job
-def delete_artatop_waveder(
-    dirs: list[Path | str],
-    optics_dir: Path | str = None,
-) -> None:
-    """
-    Delete WAVEDER files after ARTATOP run.
-
-    Parameters
-    ----------
-    dirs : list of path or str
-        Path to directories of ARTATOP jobs.
-    optics_dir : Path or str
-        Path to directory of optics VASP run.
-    """
-    if optics_dir:
-        dirs.append(optics_dir)
-
-    for dir_name in dirs:
-        delete_files(
-            strip_hostname(dir_name),
-            include_files=["WAVEDER", "WAVEDER.gz", "OPTICS"],
-            allow_missing=True,
-        )
