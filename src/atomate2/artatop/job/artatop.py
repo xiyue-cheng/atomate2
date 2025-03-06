@@ -33,6 +33,8 @@ if TYPE_CHECKING:
     from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
 
+from pathlib import Path  # Ensure Path is imported
+
 @job
 def get_artatop_jobs(
     optics_job_output,  # This should be the output of the optics_flow (e.g., TaskDoc)
@@ -64,17 +66,26 @@ def get_artatop_jobs(
 
     # Loop over ARTATOP calculation types (LIN, NLIN, ART)
     for idx, calc_type in enumerate(["lin", "nlin", "art"]):
-        input_handler = InputFileHandler(output_dir=optics_job_output.dir_name)  # Use the directory path
-        input_handler.get_input_set(calc_type, optics_job_output.dir_name)
+        # Create a unique directory for each ARTATOP calculation
+        calc_dir = Path(f"artatop_{calc_type}_{idx}")  # Ensure calc_dir is a Path object
+        calc_dir.mkdir(parents=True, exist_ok=True)  # Create the directory
 
-        # Pass the directory path as the wavefunction_dir
-        artatop_job = artatop_maker.make(wavefunction_dir=optics_job_output.dir_name, calc_type=calc_type)
+        # Copy required files from the optics directory to the new ARTATOP directory
+        copy_artatop_files(src_dir=optics_job_output.dir_name, dest_dir=calc_dir)
+
+        # Create input files for ARTATOP in the new directory
+        input_handler = InputFileHandler(output_dir=calc_dir)
+        input_handler.get_input_set(calc_type, calc_dir)
+
+        # Run ARTATOP in the new directory
+        artatop_job = artatop_maker.make(wavefunction_dir=calc_dir, calc_type=calc_type)
         artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
 
         # Store job details
-        outputs["artatop_dirs"].append(artatop_job.output.dir_name)
+        outputs["artatop_dirs"].append(str(calc_dir))  # Store as string if needed
         outputs["artatop_task_documents"].append(artatop_job.output)
         jobs.append(artatop_job)
+        print(f"calc_dir: {calc_dir}, type: {type(calc_dir)}")
 
     # Return all jobs as a Flow
     return Response(replace=Flow(jobs, output=outputs))
