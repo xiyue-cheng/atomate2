@@ -33,32 +33,9 @@ if TYPE_CHECKING:
     from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class ArtatopOpticsMaker(BaseVaspMaker):
-    """
-    Maker that performs a VASP optics computation requirNonSCFSetGeneratored for ARTATOP.
-
-    This runs:
-    1. A static calculation
-    2. A non-self-consistent optics calculation (LOPTICS=True)
-
-    Parameters
-    ----------
-    name : str
-        The job name.
-    input_set_generator : .VaspInputGenerator
-        A generator used to make the input set.
-    """
-
-    name: str = "optics_run"
-    input_set_generator: OpticsSetGenerator = field(
-        default_factory=lambda: OpticsSetGenerator(optics=True)
-    )
-
 @job
 def get_artatop_jobs(
-    optics_job_output,  # This will dynamically resolve to the actual optics directory
+    optics_job_output,  # This should be the output of the optics_flow (e.g., TaskDoc)
     artatop_maker: ARTATOPMaker | None = None,
 ) -> Response:
     """
@@ -66,8 +43,8 @@ def get_artatop_jobs(
 
     Parameters
     ----------
-    optics_job_output : JobFlow Output Reference
-        The output reference from OpticsMaker, which resolves to the actual optics directory.
+    optics_job_output : TaskDoc
+        The output reference from OpticsMaker, which is a TaskDoc object.
     artatop_maker : ARTATOPMaker or None
         Maker for the ARTATOP jobs.
 
@@ -78,7 +55,7 @@ def get_artatop_jobs(
     """
     jobs = []
     outputs = {
-        "optics_dir": optics_job_output,  # Store resolved optics_dir
+        "optics_dir": optics_job_output.dir_name,  # Extract the directory path from TaskDoc
         "artatop_dirs": [],
         "artatop_task_documents": [],
     }
@@ -87,11 +64,11 @@ def get_artatop_jobs(
 
     # Loop over ARTATOP calculation types (LIN, NLIN, ART)
     for idx, calc_type in enumerate(["lin", "nlin", "art"]):
-        input_handler = InputFileHandler(output_dir=optics_job_output)
-        input_handler.get_input_set(calc_type, optics_job_output)
+        input_handler = InputFileHandler(output_dir=optics_job_output.dir_name)  # Use the directory path
+        input_handler.get_input_set(calc_type, optics_job_output.dir_name)
 
-        # Pass `optics_job_output` as the dynamically resolved wavefunction_dir
-        artatop_job = artatop_maker.make(wavefunction_dir=optics_job_output, calc_type=calc_type)
+        # Pass the directory path as the wavefunction_dir
+        artatop_job = artatop_maker.make(wavefunction_dir=optics_job_output.dir_name, calc_type=calc_type)
         artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
 
         # Store job details

@@ -14,9 +14,7 @@ from jobflow import Flow, Maker, job
 from pymatgen.core import Structure
 from atomate2.common.files import copy_files
 
-from atomate2.vasp.flows.core import DoubleRelaxMaker
-from atomate2.vasp.jobs.core import NonSCFMaker, RelaxMaker, StaticMaker
-from atomate2.vasp.jobs.core import StaticMaker
+from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
 from atomate2.artatop.job.artatop import get_artatop_jobs
 from atomate2.vasp.sets.core import NonSCFSetGenerator, StaticSetGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
