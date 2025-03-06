@@ -29,36 +29,33 @@ logger = logging.getLogger(__name__)
 @auto_fileclient
 def copy_artatop_files(
     src_dir: Path | str,
+    dest_dir: Path | str,
     src_host: str | None = None,
     file_client: FileClient = None,
 ) -> None:
     """
-    Copy ARTATOP files to the current directory.
-
-    This function will gunzip any gzipped files.
+    Copy ARTATOP files from the source directory to the destination directory.
 
     Parameters
     ----------
     src_dir : Path or str
-        The source directory.
+        The source directory containing the input files.
+    dest_dir : Path or str
+        The destination directory where the files will be copied.
     src_host : str or None
-        The source hostname used to specify a remote filesystem. Can be given as
-        either "username@remote_host" or just "remote_host" in which case the username
-        will be inferred from the current user. If ``None``, the local filesystem will
-        be used as the source.
+        The source hostname for remote filesystems.
     file_client : FileClient
-        A file client to use for performing file operations.
+        A file client for performing file operations.
     """
-    
-    src_dir = strip_hostname(src_dir)  # TODO: Handle hostnames properly.
-    
-    logger.info(f"Copying ARTATOP inputs from {src_dir}")
+    src_dir = strip_hostname(src_dir)
+    dest_dir = strip_hostname(dest_dir)
+
+    logger.info(f"Copying ARTATOP inputs from {src_dir} to {dest_dir}")
     directory_listing = file_client.listdir(src_dir, host=src_host)
 
-
-    # Collect required files (VASP)
+    # Collect required files (e.g., WAVECAR, vasprun.xml)
     files = []
-    for file in VASP_OUTPUT_FILES:
+    for file in VASP_OUTPUT_FILES:  # Ensure VASP_OUTPUT_FILES is defined
         found_file = get_zfile(directory_listing, file, allow_missing=True)
         if found_file is not None:
             files.append(found_file)
@@ -66,12 +63,13 @@ def copy_artatop_files(
     # Copy required files
     copy_files(
         src_dir,
+        dest_dir,
         src_host=src_host,
         include_files=files,
         file_client=file_client,
     )
 
-    # Decompress .gz files
+    # Decompress .gz files if necessary
     gunzip_files(
         include_files=files,
         allow_missing=True,

@@ -25,6 +25,7 @@ from atomate2.utils.path import strip_hostname
 from atomate2.vasp.jobs.base import BaseVaspMaker
 from atomate2.vasp.sets.core import NonSCFSetGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
+from atomate2.artatop.files import copy_artatop_files
 from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, ArtatopOutputModel
 
 if TYPE_CHECKING:
@@ -61,6 +62,8 @@ def get_artatop_jobs(
         "artatop_dirs": [],
         "artatop_task_documents": [],
     }
+    
+    print(os.listdir(optics_job_output.dir_name))
 
     artatop_maker = artatop_maker or ARTATOPMaker()
 
@@ -72,6 +75,7 @@ def get_artatop_jobs(
 
         # Copy required files from the optics directory to the new ARTATOP directory
         copy_artatop_files(src_dir=optics_job_output.dir_name, dest_dir=calc_dir)
+        logger.info(f"Copying files from {src_dir} to {dest_dir}")
 
         # Create input files for ARTATOP in the new directory
         input_handler = InputFileHandler(output_dir=calc_dir)
