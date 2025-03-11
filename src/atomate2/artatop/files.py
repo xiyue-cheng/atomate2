@@ -18,7 +18,7 @@ VASP_OUTPUT_FILES = [
     "INCAR",
     "vasprun.xml",
     "PROCAR",
-    "WAVECAR",
+    "CONTCAR",
     "OPTIC",
     "WAVEDER",
 ]

@@ -16,6 +16,7 @@ from atomate2.artatop.files import (
     ARTATOP_OUTPUT_FILES,
     VASP_OUTPUT_FILES,
     copy_artatop_files,
+    validate_required_files,
 )
 from atomate2.artatop.run import run_artatop
 from atomate2.artatop.schemas import ArtatopTaskDocument
@@ -71,13 +72,15 @@ class ARTATOPMaker(Maker):
             Parsed results from ARTATOP calculations.
         """
 
-        # Validate required VASP output files in wavefunction_dir
-        validate_required_files(VASP_OUTPUT_FILES, Path(wavefunction_dir))
-        logger.info(f"All required files found in 'wavefunction_dir': {wavefunction_dir}")
+
         
-        
+        run_dir = Path.cwd()
         # Copy required files # VASP for example
-        copy_artatop_files(wavefunction_dir)
+        copy_artatop_files(wavefunction_dir, dest_dir=run_dir)
+        
+        # Validate required VASP output files in wavefunction_dir
+        #validate_required_files(VASP_OUTPUT_FILES, Path(wavefunction_dir))
+        #logger.info(f"All required files found in 'wavefunction_dir': {wavefunction_dir}")
 
         # Create input files for ARTATOP
         input_handler = InputFileHandler(output_dir="./artatop_outputs")
