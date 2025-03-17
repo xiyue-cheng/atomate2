@@ -23,6 +23,7 @@ from atomate2.common.utils import (
     parse_transformations,
 )
 
+
 from atomate2.utils.datetime import datetime_str
 
 try:
@@ -93,16 +94,31 @@ class ArtatopInputModel(BaseModel):
 
     @classmethod
     def from_file(cls, filename: str) -> "ArtatopInputModel":
-        """Load input settings from an ARTATOP input file."""
-        with open(filename) as f:
-            input_data = json.load(f)
-        return cls(**input_data)
+        # Just use filename to guess the type
+        fname = Path(filename).name.lower()
 
-    def to_file(self, filename: str) -> None:
-        """Save input settings to a JSON file."""
-        with open(filename, "w") as f:
-            json.dump(self.dict(), f, indent=4)
+        if "lin" in fname:
+            calc_type = "linear"
+        elif "nlin" in fname or "nonlin" in fname:
+            calc_type = "nonlinear"
+        elif "art" in fname:
+            calc_type = "art"
+        else:
+            raise ValueError(f"Could not detect calc_type from filename: {filename}")
 
+        # Default task and other metadata
+        task = "default_task"  # You can later extract this from file if needed
+        input_file = str(filename)
+        output_dir = str(Path(filename).parent)
+        custom_components = None  # Set if needed in the future
+
+        return cls(
+            calc_type=calc_type,
+            input_file=input_file,
+            output_dir=output_dir,
+            task=task,
+            custom_components=custom_components,
+        )
 
 class ArtatopOutputModel(BaseModel):
     """Definition of output results from the ARTATOP computation."""
@@ -125,12 +141,11 @@ class ArtatopOutputModel(BaseModel):
     @classmethod
     def from_directory(cls, dir_name: str) -> "ArtatopOutputModel":
         """Parse ARTATOP outputs and construct the output document."""
-        from atomate2.artatop.parsers import (
+        from atomate2.artatop.artatop_parser import (
             parse_atomic_contributions,
             parse_linear_response,
             parse_nonlinear_response,
         )
-
         dir_path = Path(dir_name)
 
         # Parse outputs
@@ -183,14 +198,25 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
         additional_metadata: dict = None,
     ) -> "ArtatopTaskDocument":
         """Parse ARTATOP inputs and outputs, then construct the task document."""
+        from pymatgen.io.vasp import Vasprun
+        
         # Load input data
         input_data = ArtatopInputModel.from_file(input_file)
 
         # Parse outputs
         output_data = ArtatopOutputModel.from_directory(dir_name)
+        
+        vasprun_path = Path(dir_name) / "vasprun.xml"
+        if not vasprun_path.exists():
+            raise FileNotFoundError(f"No vasprun.xml found in {dir_name} to load structure.")
+
+        vasprun = Vasprun(str(vasprun_path))
+        structure = vasprun.final_structure
+
 
         # Construct and return the task document
         return cls(
+            structure=structure,
             dir_name=str(dir_name),
             input_data=input_data,
             output_data=output_data,

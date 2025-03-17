@@ -56,7 +56,6 @@ def get_artatop_jobs(
     Response
         A response containing the ARTATOP jobs.
     """
-    jobs = []
     outputs = {
         "optics_dir": optics_job_output.dir_name,  # Extract the directory path from TaskDoc
         "artatop_dirs": [],
@@ -67,33 +66,14 @@ def get_artatop_jobs(
 
     artatop_maker = artatop_maker or ARTATOPMaker()
 
-    # Loop over ARTATOP calculation types (LIN, NLIN, ART)
-    for idx, calc_type in enumerate(["lin", "nlin"]):
-        # Create a unique directory for each ARTATOP calculation
-        #calc_dir = Path(f"artatop_{calc_type}_{idx}")  # Ensure calc_dir is a Path object
-        #calc_dir.mkdir(parents=True, exist_ok=True)  # Create the directory
-        main_dir = Path (".")
-        src_dir = optics_job_output.dir_name
-        dest_dir = main_dir
 
-        # Copy required files from the optics directory to the new ARTATOP directory
-        #copy_artatop_files(src_dir=src_dir, dest_dir=dest_dir)
-        #logger.info(f"Copying files from {src_dir} to {dest_dir}")
+    # Run ARTATOP in the new directory
+    artatop_job = artatop_maker.make(wavefunction_dir=optics_job_output.dir_name)
 
-        # Create input files for ARTATOP in the new directory
-        input_handler = InputFileHandler(output_dir=dest_dir)
-        input_handler.get_input_set(calc_type, dest_dir)
-
-        # Run ARTATOP in the new directory
-        artatop_maker = ARTATOPMaker(calc_type=calc_type)
-        artatop_job = artatop_maker.make(wavefunction_dir=src_dir)
-        artatop_job.append_name(f"_{calc_type}_calculation_{idx}")
-
-        # Store job details
-        outputs["artatop_dirs"].append(str(dest_dir))  # Store as string if needed
-        outputs["artatop_task_documents"].append(artatop_job.output)
-        jobs.append(artatop_job)
-        #print(f"calc_dir: {calc_dir}, type: {type(calc_dir)}")
+    # Store job details
+    outputs["artatop_dirs"].append(str(Path(".")))  # Store as string if needed
+    outputs["artatop_task_documents"].append(artatop_job.output)
+    #print(f"calc_dir: {calc_dir}, type: {type(calc_dir)}")
 
     # Return all jobs as a Flow
-    return Response(replace=Flow(jobs, output=outputs))
+    return Response(replace=Flow(artatop_job, output=outputs))

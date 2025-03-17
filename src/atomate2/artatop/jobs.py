@@ -71,31 +71,63 @@ class ARTATOPMaker(Maker):
         ArtatopTaskDocument
             Parsed results from ARTATOP calculations.
         """
-
-
-        
         run_dir = Path.cwd()
+        wavefunction_dir = Path(wavefunction_dir)
         # Copy required files # VASP for example
+        input_handler = InputFileHandler()
         copy_artatop_files(wavefunction_dir, dest_dir=run_dir)
         
         # Validate required VASP output files in wavefunction_dir
         #validate_required_files(VASP_OUTPUT_FILES, Path(wavefunction_dir))
         #logger.info(f"All required files found in 'wavefunction_dir': {wavefunction_dir}")
-
+        
         # Create input files for ARTATOP
-        input_handler = InputFileHandler(output_dir="./artatop_outputs")
-        artatop_input = input_handler.get_input_set(
-            calc_type=self.calc_type,
-            calc_dir=Path.cwd(),
-            component=self.custom_components,
-        )
+        
+        
+        def run_artatop_step(calc_type: str, input_file: Path):
+            output_file = f"re_{calc_type}"
+            stderr_file = f"std_err_{calc_type}.txt"
+            artatop_cmd = f"{SETTINGS.ARTATOP_CMD} < {input_file} > {output_file}"
+            print(f"Running ARTATOP command for {calc_type}:", artatop_cmd)
+            
+            from custodian.artatop.handlers import ArtatopFilesValidator
 
-        # Run ARTATOP
-        logger.info(f"Running ARTATOP for {self.calc_type} calculation")
-        run_artatop(
-            artatop_cmd=f"artatop < {artatop_input} > output_{self.calc_type}",
-            **self.run_artatop_kwargs,
-        )
+            self.run_artatop_kwargs["validators"] = [ArtatopFilesValidator(required_files=[output_file])]
+           
+            
+
+
+            self.run_artatop_kwargs["artatop_job_kwargs"] = {
+                "output_file": output_file,
+                "stderr_file": stderr_file,
+                "artatop_cmd": artatop_cmd,
+                "gzipped": False
+            }
+            
+            
+
+            run_artatop(**self.run_artatop_kwargs)
+
+            if not Path(output_file).exists():
+                raise RuntimeError(f"ARTATOP failed: {output_file} not found.")
+              
+        # Step 2: Linear
+        lin_input = input_handler.get_input_set("lin", calc_dir=run_dir)
+        run_artatop_step("lin", lin_input)
+
+        # Step 3: Nonlinear
+        nlin_input = input_handler.get_input_set("nlin", calc_dir=run_dir)
+        run_artatop_step("nlin", nlin_input)
+
+        # Step 4: Determine ART component from nonlinear output
+        # Step 4: Determine ART component (result.re or nonlin files)
+        component = input_handler.get_best_component(run_dir)
+
+        # Step 5: ART
+        art_input = input_handler.get_input_set("art", calc_dir=run_dir, component=component)
+        run_artatop_step("art", art_input)
+        
+
 
         # Compress output files
         logger.info("Compressing ARTATOP output files")
@@ -104,6 +136,8 @@ class ARTATOPMaker(Maker):
             setting=SETTINGS.ARTATOP_ZIP_FILES,
             files_list=_FILES_TO_ZIP,
         )
+        
+        self.task_document_kwargs["input_file"] = str(art_input)
 
         # Parse outputs
         logger.info("Parsing ARTATOP outputs")

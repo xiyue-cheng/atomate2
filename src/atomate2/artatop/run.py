@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from custodian.custodian import Validator
 
 
-_DEFAULT_VALIDATORS = ArtatopFilesValidator()
+_DEFAULT_VALIDATORS = [ArtatopFilesValidator()]
 _DEFAULT_HANDLERS = ()
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ def run_artatop(
         return
 
     if job_type == JobType.NORMAL:
-        jobs = [ArtatopJob(split_artatop_cmd, **artatop_job_kwargs)]
+        jobs = [ArtatopJob(**artatop_job_kwargs)]
     else:
         raise ValueError(f"Unsupported job type: {job_type}")
 

@@ -6,18 +6,6 @@ class InputFileHandler:
     A handler for generating ARTATOP input files: input_lin, input_nlin, and input_art.
     """
 
-    def __init__(self, output_dir: str = "./artatop_outputs"):
-        """
-        Initialize the InputFileHandler.
-
-        Parameters
-        ----------
-        output_dir : str
-            Directory to store input files.
-        """
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-
     def get_input_set(
         self, calc_type: str, calc_dir: Path, component: str = None
     ) -> Path:
@@ -45,11 +33,13 @@ class InputFileHandler:
 $dft_src lvasp=T $end
 $opc maxomega = 30  domega = 0.01167  scissor=0.00  ecutmin = 0.03  smear = 0.03 $end
 """
+            (calc_dir/ "out_lin").mkdir(exist_ok=True)
         elif calc_type == "nlin":
             content = """NO 777
 $dft_src lvasp=T $end
 $opc maxomega = 30  domega = 0.01167  scissor=0.00  ecutmin = 0.03  smear = 0.03 $end
 """
+            (calc_dir/ "out_nonlin").mkdir(exist_ok=True)
         elif calc_type == "art":
             if not component:
                 raise ValueError("Component is required for ART calculations.")
@@ -138,3 +128,57 @@ $opc maxomega = 30  domega = 0.01167  scissor=0.00  ecutmin = 0.03  smear = 0.03
         if max_position in matrix_to_component:
             return matrix_to_component[max_position]
         raise ValueError("Invalid T-matrix format or unexpected data in `result.re`.")
+        
+
+    def find_best_component_from_nonlin(self, nonlin_dir: Path) -> str:
+        """
+        From all nonlin_*.dat files, find the component with the highest
+        Tot-Re Chi(-2w,w,w) value (first data row, 3rd column).
+        """
+        axis_map = {"x": "1", "y": "2", "z": "4"}
+
+        def component_from_filename(filename: str) -> str:
+            base = filename.replace("nonlin_", "").replace(".dat", "")
+            return ''.join(axis_map[c] for c in base)
+
+        def read_first_value(file: Path) -> float:
+            with open(file) as f:
+                for line in f:
+                    if line.strip() and not line.startswith("#"):
+                        parts = line.split()
+                        return float(parts[2])  # 3rd column
+            raise ValueError(f"No valid data in {file.name}")
+
+        best_value = float("-inf")
+        best_component = None
+
+        for file in nonlin_dir.glob("nonlin_*.dat"):
+            try:
+                value = read_first_value(file)
+                component = component_from_filename(file.name)
+                if value > best_value:
+                    best_value = value
+                    best_component = component
+            except Exception as e:
+                print(f"Skipping {file.name}: {e}")
+
+        if best_component is None:
+            raise RuntimeError("Could not determine best component from nonlin files.")
+
+        return best_component
+
+    def get_best_component(self, calc_dir: Path) -> str:
+        """
+        Get the best component from result.re if it exists, otherwise use the default method.
+        """
+        result_re = calc_dir / "result.re"
+        if result_re.exists():
+            try:
+                print("Using result.re to determine best component...")
+                return self.determine_highest_component(result_re)
+            except Exception as e:
+                print(f"Failed to use result.re: {e}")
+                print("Falling back to nonlin_*.dat files.")
+        
+        print("Using nonlin_*.dat files to determine best component...")
+        return self.find_best_component_from_nonlin(calc_dir / "out_nonlin")
