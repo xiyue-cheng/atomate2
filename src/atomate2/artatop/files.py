@@ -16,6 +16,9 @@ ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
 
 VASP_OUTPUT_FILES = [
     "INCAR",
+    "POSCAR",
+    "OUTCAR",
+    "POTCAR",
     "vasprun.xml",
     "PROCAR",
     "CONTCAR",

@@ -1,0 +1,679 @@
+#!/bin/sh
+#read_artatop-IR_deff
+
+n_w=110 #line number for nonlinear optic
+n_we=108 #line number for linear optic
+w_energy=1.167 
+
+cd out_nonlin
+chi11_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxx.dat)
+chi12_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xyy.dat)
+chi13_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xzz.dat)
+chi14_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xyz.dat)
+chi15_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxz.dat)
+chi16_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxy.dat)
+chi21_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxx.dat)
+chi22_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yyy.dat)
+chi23_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yzz.dat)
+chi24_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yyz.dat)
+chi25_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxz.dat)
+chi26_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxy.dat)
+chi31_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxx.dat)
+chi32_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zyy.dat)
+chi33_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zzz.dat)
+chi34_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zyz.dat)
+chi35_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxz.dat)
+chi36_0=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxy.dat)
+
+d11_0=$(echo "scale=5; $chi11_0/2.0*4*3.1415926/3*10" |bc)
+d12_0=$(echo "scale=5; $chi12_0/2.0*4*3.1415926/3*10" |bc)
+d13_0=$(echo "scale=5; $chi13_0/2.0*4*3.1415926/3*10" |bc)
+d14_0=$(echo "scale=5; $chi14_0/2.0*4*3.1415926/3*10" |bc)
+d15_0=$(echo "scale=5; $chi15_0/2.0*4*3.1415926/3*10" |bc)
+d16_0=$(echo "scale=5; $chi16_0/2.0*4*3.1415926/3*10" |bc)
+d21_0=$(echo "scale=5; $chi21_0/2.0*4*3.1415926/3*10" |bc)
+d22_0=$(echo "scale=5; $chi22_0/2.0*4*3.1415926/3*10" |bc)
+d23_0=$(echo "scale=5; $chi23_0/2.0*4*3.1415926/3*10" |bc)
+d24_0=$(echo "scale=5; $chi24_0/2.0*4*3.1415926/3*10" |bc)
+d25_0=$(echo "scale=5; $chi25_0/2.0*4*3.1415926/3*10" |bc)
+d26_0=$(echo "scale=5; $chi26_0/2.0*4*3.1415926/3*10" |bc)
+d31_0=$(echo "scale=5; $chi31_0/2.0*4*3.1415926/3*10" |bc)
+d32_0=$(echo "scale=5; $chi32_0/2.0*4*3.1415926/3*10" |bc)
+d33_0=$(echo "scale=5; $chi33_0/2.0*4*3.1415926/3*10" |bc)
+d34_0=$(echo "scale=5; $chi34_0/2.0*4*3.1415926/3*10" |bc)
+d35_0=$(echo "scale=5; $chi35_0/2.0*4*3.1415926/3*10" |bc)
+d36_0=$(echo "scale=5; $chi36_0/2.0*4*3.1415926/3*10" |bc)
+
+chi11_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxx.dat)
+chi12_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xyy.dat)
+chi13_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xzz.dat)
+chi14_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xyz.dat)
+chi15_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxz.dat)
+chi16_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxy.dat)
+chi21_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxx.dat)
+chi22_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yyy.dat)
+chi23_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yzz.dat)
+chi24_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yyz.dat)
+chi25_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxz.dat)
+chi26_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxy.dat)
+chi31_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxx.dat)
+chi32_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zyy.dat)
+chi33_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zzz.dat)
+chi34_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zyz.dat)
+chi35_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxz.dat)
+chi36_1=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxy.dat)
+
+d11_1=$(echo "scale=5; $chi11_1/2.0*4*3.1415926/3*10" |bc)
+d12_1=$(echo "scale=5; $chi12_1/2.0*4*3.1415926/3*10" |bc)
+d13_1=$(echo "scale=5; $chi13_1/2.0*4*3.1415926/3*10" |bc)
+d14_1=$(echo "scale=5; $chi14_1/2.0*4*3.1415926/3*10" |bc)
+d15_1=$(echo "scale=5; $chi15_1/2.0*4*3.1415926/3*10" |bc)
+d16_1=$(echo "scale=5; $chi16_1/2.0*4*3.1415926/3*10" |bc)
+d21_1=$(echo "scale=5; $chi21_1/2.0*4*3.1415926/3*10" |bc)
+d22_1=$(echo "scale=5; $chi22_1/2.0*4*3.1415926/3*10" |bc)
+d23_1=$(echo "scale=5; $chi23_1/2.0*4*3.1415926/3*10" |bc)
+d24_1=$(echo "scale=5; $chi24_1/2.0*4*3.1415926/3*10" |bc)
+d25_1=$(echo "scale=5; $chi25_1/2.0*4*3.1415926/3*10" |bc)
+d26_1=$(echo "scale=5; $chi26_1/2.0*4*3.1415926/3*10" |bc)
+d31_1=$(echo "scale=5; $chi31_1/2.0*4*3.1415926/3*10" |bc)
+d32_1=$(echo "scale=5; $chi32_1/2.0*4*3.1415926/3*10" |bc)
+d33_1=$(echo "scale=5; $chi33_1/2.0*4*3.1415926/3*10" |bc)
+d34_1=$(echo "scale=5; $chi34_1/2.0*4*3.1415926/3*10" |bc)
+d35_1=$(echo "scale=5; $chi35_1/2.0*4*3.1415926/3*10" |bc)
+d36_1=$(echo "scale=5; $chi36_1/2.0*4*3.1415926/3*10" |bc)
+
+dtemp_0=$(echo "scale=5; (19/105*($d11_0^2+$d22_0^2+$d33_0^2)+13/105*($d11_0*$d12_0+$d11_0*$d13_0+$d22_0*$d21_0+$d22_0*$d23_0+$d33_0*$d31_0+$d33_0*$d32_0)+44/105*($d16_0^2+$d15_0^2+$d26_0^2+$d24_0^2+$d35_0^2+$d34_0^2)+13/105*($d16_0*$d23_0+$d15_0*$d32_0+$d26_0*$d13_0+$d24_0*$d31_0+$d35_0*$d12_0+$d34_0*$d21_0)+5/7*(($d14_0+$d25_0+$d36_0)/3)^2)" |bc)
+
+if [ $(awk -v x=$dtemp_0 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+  dtemp_0=$(awk -v x=$dtemp_0 'BEGIN{printf("%.5f", 0-x)}')
+fi
+
+deff_0=$(echo "scale=5; sqrt($dtemp_0)" |bc)
+
+dtemp_1=$(echo "scale=5; (19/105*($d11_1^2+$d22_1^2+$d33_1^2)+13/105*($d11_1*$d12_1+$d11_1*$d13_1+$d22_1*$d21_1+$d22_1*$d23_1+$d33_1*$d31_1+$d33_1*$d32_1)+44/105*($d16_1^2+$d15_1^2+$d26_1^2+$d24_1^2+$d35_1^2+$d34_1^2)+13/105*($d16_1*$d23_1+$d15_1*$d32_1+$d26_1*$d13_1+$d24_1*$d31_1+$d35_1*$d12_1+$d34_1*$d21_1)+5/7*(($d14_1+$d25_1+$d36_1)/3)^2)" |bc)
+
+if [ $(awk -v x=$dtemp_1 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+  dtemp_1=$(awk -v x=$dtemp_1 'BEGIN{printf("%.5f", 0-x)}')
+fi
+
+deff_1=$(echo "scale=5; sqrt($dtemp_1)" |bc)
+
+echo "deff at omege = 0 eV"
+printf "%.3f \n" $deff_0
+
+echo "deff at omege = 1.167 eV"
+printf "%.3f \n" $deff_1
+
+echo "d at omege = 0 eV"
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_0 $d12_0 $d13_0 $d14_0 $d15_0 $d16_0 
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_0 $d22_0 $d23_0 $d24_0 $d25_0 $d26_0
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_0 $d32_0 $d33_0 $d34_0 $d35_0 $d36_0
+
+echo "d at omege = $w_energy eV"
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_1 $d12_1 $d13_1 $d14_1 $d15_1 $d16_1
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_1 $d22_1 $d23_1 $d24_1 $d25_1 $d26_1
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_1 $d32_1 $d33_1 $d34_1 $d35_1 $d36_1
+
+cd ../out_lin
+
+e11_0=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_xx.dat)
+e22_0=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_yy.dat)
+e33_0=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_zz.dat)
+
+e11_iw=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_xx.dat)
+e22_iw=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_yy.dat)
+e33_iw=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_zz.dat)
+
+e11_rw=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_xx.dat)
+e22_rw=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_yy.dat)
+e33_rw=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_zz.dat)
+
+n11_0=$(echo "scale=5; sqrt((sqrt($e11_0^2)+$e11_0)/2)" |bc)
+n22_0=$(echo "scale=5; sqrt((sqrt($e22_0^2)+$e22_0)/2)" |bc)
+n33_0=$(echo "scale=5; sqrt((sqrt($e33_0^2)+$e33_0)/2)" |bc)
+
+n11_w=$(echo "scale=5; sqrt((sqrt($e11_iw^2+$e11_rw^2)+$e11_rw)/2)" |bc)
+n22_w=$(echo "scale=5; sqrt((sqrt($e22_iw^2+$e22_rw^2)+$e22_rw)/2)" |bc)
+n33_w=$(echo "scale=5; sqrt((sqrt($e33_iw^2+$e33_rw^2)+$e33_rw)/2)" |bc)
+
+#birefringence
+a=$n11_0
+b=$n22_0
+c=$n33_0
+
+if [ $(echo "$a > $b" | bc) = 1 ];then
+   t=$a;a=$b;b=$t;
+fi
+
+if [ $(echo "$a > $c" | bc) = 1 ];then
+   t=$a;a=$c;c=$t;
+fi
+
+if [ $(echo "$b > $c" | bc) = 1 ];then
+   t=$b;b=$c;c=$t;
+fi
+
+delta_n=$(echo "scale=5; $c-$a" |bc)
+
+#birefringence
+a=$n11_w
+b=$n22_w
+c=$n33_w
+
+if [ $(echo "$a > $b" | bc) = 1 ];then
+   t=$a;a=$b;b=$t;
+fi
+
+if [ $(echo "$a > $c" | bc) = 1 ];then
+   t=$a;a=$c;c=$t;
+fi
+
+if [ $(echo "$b > $c" | bc) = 1 ];then
+   t=$b;b=$c;c=$t;
+fi
+
+delta_nw=$(echo "scale=5; $c-$a" |bc)
+
+echo "linear optic epsilon at 0 eV"
+printf "%.3f %.3f %.3f \n" $e11_0 $e22_0 $e33_0
+echo "refractive n at 0 eV"
+printf "%.3f %.3f %.3f \n" $n11_0 $n22_0 $n33_0
+echo "birefringence at 0 eV" 
+printf "%.3f \n" $delta_n
+echo "refractive n at $w_energy eV"
+printf "%.3f %.3f %.3f \n" $n11_w $n22_w $n33_w
+echo "birefringence at $w_energy eV" 
+printf "%.3f \n" $delta_nw
+
+cd ../
+
+echo "deff at omege = 0 eV" >> result.re
+printf "%.3f \n" $deff_0 >> result.re
+echo " " >> result.re
+
+echo "deff at omege = 1.167 eV" >> result.re
+printf "%.3f \n" $deff_1 >> result.re
+echo " " >> result.re
+
+echo "d at omege = 0 eV" >> result.re
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_0 $d12_0 $d13_0 $d14_0 $d15_0 $d16_0 >> result.re
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_0 $d22_0 $d23_0 $d24_0 $d25_0 $d26_0 >> result.re
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_0 $d32_0 $d33_0 $d34_0 $d35_0 $d36_0 >> result.re
+echo " ">> result.re
+
+echo "d at omege = $w_energy eV" >> result.re
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_1 $d12_1 $d13_1 $d14_1 $d15_1 $d16_1 >> result.re
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_1 $d22_1 $d23_1 $d24_1 $d25_1 $d26_1 >> result.re
+printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_1 $d32_1 $d33_1 $d34_1 $d35_1 $d36_1 >> result.re
+
+echo " " >> result.re
+echo "linear optic epsilon at 0 eV" >> result.re
+printf "%.3f %.3f %.3f \n" $e11_0 $e22_0 $e33_0 >> result.re
+
+echo " " >> result.re
+echo "refractive n at 0 eV" >> result.re
+printf "%.3f %.3f %.3f \n" $n11_0 $n22_0 $n33_0 >> result.re
+
+echo " " >> result.re
+echo "birefringence at 0 eV" >> result.re
+printf "%.3f \n" $delta_n >> result.re
+
+echo " " >> result.re
+echo "refractive n at $w_energy eV" >> result.re
+printf "%.3f %.3f %.3f \n" $n11_w $n22_w $n33_w >> result.re
+
+echo " " >> result.re
+echo "birefringence at $w_energy eV"  >> result.re
+printf "%.3f \n" $delta_nw >> result.re
+
+# spin
+cd out_nonlin
+if [ -n "$(ls . | grep "_up")" ] || [ -n "$(ls . | grep "_down")" ] ; then
+   #up
+   chi11_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxx_up.dat)
+   chi12_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xyy_up.dat)
+   chi13_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xzz_up.dat)
+   chi14_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xyz_up.dat)
+   chi15_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxz_up.dat)
+   chi16_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxy_up.dat)
+   chi21_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxx_up.dat)
+   chi22_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yyy_up.dat)
+   chi23_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yzz_up.dat)
+   chi24_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yyz_up.dat)
+   chi25_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxz_up.dat)
+   chi26_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxy_up.dat)
+   chi31_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxx_up.dat)
+   chi32_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zyy_up.dat)
+   chi33_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zzz_up.dat)
+   chi34_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zyz_up.dat)
+   chi35_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxz_up.dat)
+   chi36_0_up=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxy_up.dat)
+
+   d11_0_up=$(echo "scale=5; $chi11_0_up/2.0*4*3.1415926/3*10" |bc)
+   d12_0_up=$(echo "scale=5; $chi12_0_up/2.0*4*3.1415926/3*10" |bc)
+   d13_0_up=$(echo "scale=5; $chi13_0_up/2.0*4*3.1415926/3*10" |bc)
+   d14_0_up=$(echo "scale=5; $chi14_0_up/2.0*4*3.1415926/3*10" |bc)
+   d15_0_up=$(echo "scale=5; $chi15_0_up/2.0*4*3.1415926/3*10" |bc)
+   d16_0_up=$(echo "scale=5; $chi16_0_up/2.0*4*3.1415926/3*10" |bc)
+   d21_0_up=$(echo "scale=5; $chi21_0_up/2.0*4*3.1415926/3*10" |bc)
+   d22_0_up=$(echo "scale=5; $chi22_0_up/2.0*4*3.1415926/3*10" |bc)
+   d23_0_up=$(echo "scale=5; $chi23_0_up/2.0*4*3.1415926/3*10" |bc)
+   d24_0_up=$(echo "scale=5; $chi24_0_up/2.0*4*3.1415926/3*10" |bc)
+   d25_0_up=$(echo "scale=5; $chi25_0_up/2.0*4*3.1415926/3*10" |bc)
+   d26_0_up=$(echo "scale=5; $chi26_0_up/2.0*4*3.1415926/3*10" |bc)
+   d31_0_up=$(echo "scale=5; $chi31_0_up/2.0*4*3.1415926/3*10" |bc)
+   d32_0_up=$(echo "scale=5; $chi32_0_up/2.0*4*3.1415926/3*10" |bc)
+   d33_0_up=$(echo "scale=5; $chi33_0_up/2.0*4*3.1415926/3*10" |bc)
+   d34_0_up=$(echo "scale=5; $chi34_0_up/2.0*4*3.1415926/3*10" |bc)
+   d35_0_up=$(echo "scale=5; $chi35_0_up/2.0*4*3.1415926/3*10" |bc)
+   d36_0_up=$(echo "scale=5; $chi36_0_up/2.0*4*3.1415926/3*10" |bc)
+
+   chi11_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxx_up.dat)
+   chi12_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xyy_up.dat)
+   chi13_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xzz_up.dat)
+   chi14_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xyz_up.dat)
+   chi15_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxz_up.dat)
+   chi16_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxy_up.dat)
+   chi21_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxx_up.dat)
+   chi22_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yyy_up.dat)
+   chi23_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yzz_up.dat)
+   chi24_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yyz_up.dat)
+   chi25_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxz_up.dat)
+   chi26_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxy_up.dat)
+   chi31_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxx_up.dat)
+   chi32_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zyy_up.dat)
+   chi33_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zzz_up.dat)
+   chi34_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zyz_up.dat)
+   chi35_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxz_up.dat)
+   chi36_1_up=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxy_up.dat)
+
+   d11_1_up=$(echo "scale=5; $chi11_1_up/2.0*4*3.1415926/3*10" |bc)
+   d12_1_up=$(echo "scale=5; $chi12_1_up/2.0*4*3.1415926/3*10" |bc)
+   d13_1_up=$(echo "scale=5; $chi13_1_up/2.0*4*3.1415926/3*10" |bc)
+   d14_1_up=$(echo "scale=5; $chi14_1_up/2.0*4*3.1415926/3*10" |bc)
+   d15_1_up=$(echo "scale=5; $chi15_1_up/2.0*4*3.1415926/3*10" |bc)
+   d16_1_up=$(echo "scale=5; $chi16_1_up/2.0*4*3.1415926/3*10" |bc)
+   d21_1_up=$(echo "scale=5; $chi21_1_up/2.0*4*3.1415926/3*10" |bc)
+   d22_1_up=$(echo "scale=5; $chi22_1_up/2.0*4*3.1415926/3*10" |bc)
+   d23_1_up=$(echo "scale=5; $chi23_1_up/2.0*4*3.1415926/3*10" |bc)
+   d24_1_up=$(echo "scale=5; $chi24_1_up/2.0*4*3.1415926/3*10" |bc)
+   d25_1_up=$(echo "scale=5; $chi25_1_up/2.0*4*3.1415926/3*10" |bc)
+   d26_1_up=$(echo "scale=5; $chi26_1_up/2.0*4*3.1415926/3*10" |bc)
+   d31_1_up=$(echo "scale=5; $chi31_1_up/2.0*4*3.1415926/3*10" |bc)
+   d32_1_up=$(echo "scale=5; $chi32_1_up/2.0*4*3.1415926/3*10" |bc)
+   d33_1_up=$(echo "scale=5; $chi33_1_up/2.0*4*3.1415926/3*10" |bc)
+   d34_1_up=$(echo "scale=5; $chi34_1_up/2.0*4*3.1415926/3*10" |bc)
+   d35_1_up=$(echo "scale=5; $chi35_1_up/2.0*4*3.1415926/3*10" |bc)
+   d36_1_up=$(echo "scale=5; $chi36_1_up/2.0*4*3.1415926/3*10" |bc)
+
+   dtemp_0_up=$(echo "scale=5; (19/105*($d11_0_up^2+$d22_0_up^2+$d33_0_up^2)+13/105*($d11_0_up*$d12_0_up+$d11_0_up*$d13_0_up+$d22_0_up*$d21_0_up+$d22_0_up*$d23_0_up+$d33_0_up*$d31_0_up+$d33_0_up*$d32_0_up)+44/105*($d16_0_up^2+$d15_0_up^2+$d26_0_up^2+$d24_0_up^2+$d35_0_up^2+$d34_0_up^2)+13/105*($d16_0_up*$d23_0_up+$d15_0_up*$d32_0_up+$d26_0_up*$d13_0_up+$d24_0_up*$d31_0_up+$d35_0_up*$d12_0_up+$d34_0_up*$d21_0_up)+5/7*(($d14_0_up+$d25_0_up+$d36_0_up)/3)^2)" |bc)
+
+   if [ $(awk -v x=$dtemp_0_up 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+   dtemp_0_up=$(awk -v x=$dtemp_0_up 'BEGIN{printf("%.5f", 0-x)}')
+   fi
+
+   deff_0_up=$(echo "scale=5; sqrt($dtemp_0_up)" |bc)
+
+   dtemp_1_up=$(echo "scale=5; (19/105*($d11_1_up^2+$d22_1_up^2+$d33_1_up^2)+13/105*($d11_1_up*$d12_1_up+$d11_1_up*$d13_1_up+$d22_1_up*$d21_1_up+$d22_1_up*$d23_1_up+$d33_1_up*$d31_1_up+$d33_1_up*$d32_1_up)+44/105*($d16_1_up^2+$d15_1_up^2+$d26_1_up^2+$d24_1_up^2+$d35_1_up^2+$d34_1_up^2)+13/105*($d16_1_up*$d23_1_up+$d15_1_up*$d32_1_up+$d26_1_up*$d13_1_up+$d24_1_up*$d31_1_up+$d35_1_up*$d12_1_up+$d34_1_up*$d21_1_up)+5/7*(($d14_1_up+$d25_1_up+$d36_1_up)/3)^2)" |bc)
+
+   if [ $(awk -v x=$dtemp_1_up 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+   dtemp_1_up=$(awk -v x=$dtemp_1_up 'BEGIN{printf("%.5f", 0-x)}')
+   fi
+
+   deff_1_up=$(echo "scale=5; sqrt($dtemp_1_up)" |bc)
+
+   echo " " 
+   echo "deff for spin up at omege = 0 eV"
+   printf "%.3f \n" $deff_0_up
+
+   echo "deff for spin up at omege = 1.167 eV"
+   printf "%.3f \n" $deff_1_up
+
+   echo "d for spin up at omege = 0 eV"
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_0_up $d12_0_up $d13_0_up $d14_0_up $d15_0_up $d16_0_up 
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_0_up $d22_0_up $d23_0_up $d24_0_up $d25_0_up $d26_0_up
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_0_up $d32_0_up $d33_0_up $d34_0_up $d35_0_up $d36_0_up
+
+   echo "d for spin up at omege = $w_energy eV"
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_1_up $d12_1_up $d13_1_up $d14_1_up $d15_1_up $d16_1_up
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_1_up $d22_1_up $d23_1_up $d24_1_up $d25_1_up $d26_1_up
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_1_up $d32_1_up $d33_1_up $d34_1_up $d35_1_up $d36_1_up
+
+   cd ../out_lin
+
+   e11_0_up=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_xx_up.dat)
+   e22_0_up=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_yy_up.dat)
+   e33_0_up=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_zz_up.dat)
+
+   e11_iw_up=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_xx_up.dat)
+   e22_iw_up=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_yy_up.dat)
+   e33_iw_up=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_zz_up.dat)
+
+   e11_rw_up=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_xx_up.dat)
+   e22_rw_up=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_yy_up.dat)
+   e33_rw_up=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_zz_up.dat)
+
+   n11_0_up=$(echo "scale=5; sqrt((sqrt($e11_0_up^2)+$e11_0_up)/2)" |bc)
+   n22_0_up=$(echo "scale=5; sqrt((sqrt($e22_0_up^2)+$e22_0_up)/2)" |bc)
+   n33_0_up=$(echo "scale=5; sqrt((sqrt($e33_0_up^2)+$e33_0_up)/2)" |bc)
+
+   n11_w_up=$(echo "scale=5; sqrt((sqrt($e11_iw_up^2+$e11_rw_up^2)+$e11_rw_up)/2)" |bc)
+   n22_w_up=$(echo "scale=5; sqrt((sqrt($e22_iw_up^2+$e22_rw_up^2)+$e22_rw_up)/2)" |bc)
+   n33_w_up=$(echo "scale=5; sqrt((sqrt($e33_iw_up^2+$e33_rw_up^2)+$e33_rw_up)/2)" |bc)
+
+   #birefringence
+   a=$n11_0_up
+   b=$n22_0_up
+   c=$n33_0_up
+
+   if [ $(echo "$a > $b" | bc) = 1 ];then
+      t=$a;a=$b;b=$t;
+   fi
+
+   if [ $(echo "$a > $c" | bc) = 1 ];then
+      t=$a;a=$c;c=$t;
+   fi
+
+   if [ $(echo "$b > $c" | bc) = 1 ];then
+      t=$b;b=$c;c=$t;
+   fi
+
+   delta_n_up=$(echo "scale=5; $c-$a" |bc)
+
+   #birefringence
+   a=$n11_w_up
+   b=$n22_w_up
+   c=$n33_w_up
+
+   if [ $(echo "$a > $b" | bc) = 1 ];then
+      t=$a;a=$b;b=$t;
+   fi
+
+   if [ $(echo "$a > $c" | bc) = 1 ];then
+      t=$a;a=$c;c=$t;
+   fi
+
+   if [ $(echo "$b > $c" | bc) = 1 ];then
+      t=$b;b=$c;c=$t;
+   fi
+
+   delta_nw_up=$(echo "scale=5; $c-$a" |bc)
+
+
+   echo "linear optic epsilon for spin up at 0 eV"
+   printf "%.3f %.3f %.3f \n" $e11_0_up $e22_0_up $e33_0_up
+   echo "refractive n for spin up at 0 eV"
+   printf "%.3f %.3f %.3f \n" $n11_0_up $n22_0_up $n33_0_up
+   echo "birefringence for spin up at 0 eV" 
+   printf "%.3f \n" $delta_n_up
+   echo "refractive n for spin up at $w_energy eV"
+   printf "%.3f %.3f %.3f \n" $n11_w_up $n22_w_up $n33_w_up
+   echo "birefringence for spin up at $w_energy eV" 
+   printf "%.3f \n" $delta_nw_up
+
+   cd ../
+
+   echo "deff for spin up at omege = 0 eV" >> result_up.re
+   printf "%.3f \n" $deff_0_up >> result_up.re
+   echo " " >> result_up.re
+
+   echo "deff for spin up at omege = 1.167 eV" >> result_up.re
+   printf "%.3f \n" $deff_1_up >> result_up.re
+   echo " " >> result_up.re
+
+   echo "d for spin up at omege = 0 eV" >> result_up.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_0_up $d12_0_up $d13_0_up $d14_0_up $d15_0_up $d16_0_up >> result_up.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_0_up $d22_0_up $d23_0_up $d24_0_up $d25_0_up $d26_0_up >> result_up.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_0_up $d32_0_up $d33_0_up $d34_0_up $d35_0_up $d36_0_up >> result_up.re
+   echo " ">> result_up.re
+
+   echo "d for spin up at omege = $w_energy eV" >> result_up.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_1_up $d12_1_up $d13_1_up $d14_1_up $d15_1_up $d16_1_up >> result_up.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_1_up $d22_1_up $d23_1_up $d24_1_up $d25_1_up $d26_1_up >> result_up.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_1_up $d32_1_up $d33_1_up $d34_1_up $d35_1_up $d36_1_up >> result_up.re
+
+   echo " " >> result_up.re
+   echo "linear optic epsilon for spin up at 0 eV" >> result_up.re
+   printf "%.3f %.3f %.3f \n" $e11_0_up $e22_0_up $e33_0_up >> result_up.re
+
+   echo " " >> result_up.re
+   echo "refractive n for spin up at 0 eV" >> result_up.re
+   printf "%.3f %.3f %.3f \n" $n11_0_up $n22_0_up $n33_0_up >> result_up.re
+
+   echo " " >> result_up.re
+   echo "birefringence for spin up at 0 eV" >> result_up.re
+   printf "%.3f \n" $delta_n_up >> result_up.re
+
+   echo " " >> result_up.re
+   echo "refractive n for spin up at $w_energy eV" >> result_up.re
+   printf "%.3f %.3f %.3f \n" $n11_w_up $n22_w_up $n33_w_up >> result_up.re
+
+   echo " " >> result_up.re
+   echo "birefringence for spin up at $w_energy eV"  >> result_up.re
+   printf "%.3f \n" $delta_nw_up  >> result_up.re
+
+   #down
+   cd out_nonlin
+   chi11_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxx_down.dat)
+   chi12_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xyy_down.dat)
+   chi13_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xzz_down.dat)
+   chi14_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xyz_down.dat)
+   chi15_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxz_down.dat)
+   chi16_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_xxy_down.dat)
+   chi21_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxx_down.dat)
+   chi22_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yyy_down.dat)
+   chi23_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yzz_down.dat)
+   chi24_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yyz_down.dat)
+   chi25_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxz_down.dat)
+   chi26_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_yxy_down.dat)
+   chi31_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxx_down.dat)
+   chi32_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zyy_down.dat)
+   chi33_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zzz_down.dat)
+   chi34_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zyz_down.dat)
+   chi35_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxz_down.dat)
+   chi36_0_down=$(awk 'NR=='10' {printf("%.5f\n", $3*1) }' nonlin_zxy_down.dat)
+
+   d11_0_down=$(echo "scale=5; $chi11_0_down/2.0*4*3.1415926/3*10" |bc)
+   d12_0_down=$(echo "scale=5; $chi12_0_down/2.0*4*3.1415926/3*10" |bc)
+   d13_0_down=$(echo "scale=5; $chi13_0_down/2.0*4*3.1415926/3*10" |bc)
+   d14_0_down=$(echo "scale=5; $chi14_0_down/2.0*4*3.1415926/3*10" |bc)
+   d15_0_down=$(echo "scale=5; $chi15_0_down/2.0*4*3.1415926/3*10" |bc)
+   d16_0_down=$(echo "scale=5; $chi16_0_down/2.0*4*3.1415926/3*10" |bc)
+   d21_0_down=$(echo "scale=5; $chi21_0_down/2.0*4*3.1415926/3*10" |bc)
+   d22_0_down=$(echo "scale=5; $chi22_0_down/2.0*4*3.1415926/3*10" |bc)
+   d23_0_down=$(echo "scale=5; $chi23_0_down/2.0*4*3.1415926/3*10" |bc)
+   d24_0_down=$(echo "scale=5; $chi24_0_down/2.0*4*3.1415926/3*10" |bc)
+   d25_0_down=$(echo "scale=5; $chi25_0_down/2.0*4*3.1415926/3*10" |bc)
+   d26_0_down=$(echo "scale=5; $chi26_0_down/2.0*4*3.1415926/3*10" |bc)
+   d31_0_down=$(echo "scale=5; $chi31_0_down/2.0*4*3.1415926/3*10" |bc)
+   d32_0_down=$(echo "scale=5; $chi32_0_down/2.0*4*3.1415926/3*10" |bc)
+   d33_0_down=$(echo "scale=5; $chi33_0_down/2.0*4*3.1415926/3*10" |bc)
+   d34_0_down=$(echo "scale=5; $chi34_0_down/2.0*4*3.1415926/3*10" |bc)
+   d35_0_down=$(echo "scale=5; $chi35_0_down/2.0*4*3.1415926/3*10" |bc)
+   d36_0_down=$(echo "scale=5; $chi36_0_down/2.0*4*3.1415926/3*10" |bc)
+
+   chi11_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxx_down.dat)
+   chi12_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xyy_down.dat)
+   chi13_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xzz_down.dat)
+   chi14_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xyz_down.dat)
+   chi15_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxz_down.dat)
+   chi16_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_xxy_down.dat)
+   chi21_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxx_down.dat)
+   chi22_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yyy_down.dat)
+   chi23_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yzz_down.dat)
+   chi24_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yyz_down.dat)
+   chi25_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxz_down.dat)
+   chi26_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_yxy_down.dat)
+   chi31_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxx_down.dat)
+   chi32_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zyy_down.dat)
+   chi33_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zzz_down.dat)
+   chi34_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zyz_down.dat)
+   chi35_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxz_down.dat)
+   chi36_1_down=$(awk 'NR=='$n_w' {printf("%.5f\n", $3*1) }' nonlin_zxy_down.dat)
+
+   d11_1_down=$(echo "scale=5; $chi11_1_down/2.0*4*3.1415926/3*10" |bc)
+   d12_1_down=$(echo "scale=5; $chi12_1_down/2.0*4*3.1415926/3*10" |bc)
+   d13_1_down=$(echo "scale=5; $chi13_1_down/2.0*4*3.1415926/3*10" |bc)
+   d14_1_down=$(echo "scale=5; $chi14_1_down/2.0*4*3.1415926/3*10" |bc)
+   d15_1_down=$(echo "scale=5; $chi15_1_down/2.0*4*3.1415926/3*10" |bc)
+   d16_1_down=$(echo "scale=5; $chi16_1_down/2.0*4*3.1415926/3*10" |bc)
+   d21_1_down=$(echo "scale=5; $chi21_1_down/2.0*4*3.1415926/3*10" |bc)
+   d22_1_down=$(echo "scale=5; $chi22_1_down/2.0*4*3.1415926/3*10" |bc)
+   d23_1_down=$(echo "scale=5; $chi23_1_down/2.0*4*3.1415926/3*10" |bc)
+   d24_1_down=$(echo "scale=5; $chi24_1_down/2.0*4*3.1415926/3*10" |bc)
+   d25_1_down=$(echo "scale=5; $chi25_1_down/2.0*4*3.1415926/3*10" |bc)
+   d26_1_down=$(echo "scale=5; $chi26_1_down/2.0*4*3.1415926/3*10" |bc)
+   d31_1_down=$(echo "scale=5; $chi31_1_down/2.0*4*3.1415926/3*10" |bc)
+   d32_1_down=$(echo "scale=5; $chi32_1_down/2.0*4*3.1415926/3*10" |bc)
+   d33_1_down=$(echo "scale=5; $chi33_1_down/2.0*4*3.1415926/3*10" |bc)
+   d34_1_down=$(echo "scale=5; $chi34_1_down/2.0*4*3.1415926/3*10" |bc)
+   d35_1_down=$(echo "scale=5; $chi35_1_down/2.0*4*3.1415926/3*10" |bc)
+   d36_1_down=$(echo "scale=5; $chi36_1_down/2.0*4*3.1415926/3*10" |bc)
+
+   dtemp_0_down=$(echo "scale=5; (19/105*($d11_0_down^2+$d22_0_down^2+$d33_0_down^2)+13/105*($d11_0_down*$d12_0_down+$d11_0_down*$d13_0_down+$d22_0_down*$d21_0_down+$d22_0_down*$d23_0_down+$d33_0_down*$d31_0_down+$d33_0_down*$d32_0_down)+44/105*($d16_0_down^2+$d15_0_down^2+$d26_0_down^2+$d24_0_down^2+$d35_0_down^2+$d34_0_down^2)+13/105*($d16_0_down*$d23_0_down+$d15_0_down*$d32_0_down+$d26_0_down*$d13_0_down+$d24_0_down*$d31_0_down+$d35_0_down*$d12_0_down+$d34_0_down*$d21_0_down)+5/7*(($d14_0_down+$d25_0_down+$d36_0_down)/3)^2)" |bc)
+
+   if [ $(awk -v x=$dtemp_0_down 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+   dtemp_0_down=$(awk -v x=$dtemp_0_down 'BEGIN{printf("%.5f", 0-x)}')
+   fi
+
+   deff_0_down=$(echo "scale=5; sqrt($dtemp_0_down)" |bc)
+
+   dtemp_1_down=$(echo "scale=5; (19/105*($d11_1_down^2+$d22_1_down^2+$d33_1_down^2)+13/105*($d11_1_down*$d12_1_down+$d11_1_down*$d13_1_down+$d22_1_down*$d21_1_down+$d22_1_down*$d23_1_down+$d33_1_down*$d31_1_down+$d33_1_down*$d32_1_down)+44/105*($d16_1_down^2+$d15_1_down^2+$d26_1_down^2+$d24_1_down^2+$d35_1_down^2+$d34_1_down^2)+13/105*($d16_1_down*$d23_1_down+$d15_1_down*$d32_1_down+$d26_1_down*$d13_1_down+$d24_1_down*$d31_1_down+$d35_1_down*$d12_1_down+$d34_1_down*$d21_1_down)+5/7*(($d14_1_down+$d25_1_down+$d36_1_down)/3)^2)" |bc)
+
+   if [ $(awk -v x=$dtemp_1_down 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+   dtemp_1_down=$(awk -v x=$dtemp_1_down 'BEGIN{printf("%.5f", 0-x)}')
+   fi
+
+   deff_1_down=$(echo "scale=5; sqrt($dtemp_1_down)" |bc)
+
+   echo " " 
+   echo "deff for spin down at omege = 0 eV"
+   printf "%.3f \n" $deff_0_down
+
+   echo "deff for spin down at omege = 1.167 eV"
+   printf "%.3f \n" $deff_1_down
+
+   echo "d for spin down at omege = 0 eV"
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_0_down $d12_0_down $d13_0_down $d14_0_down $d15_0_down $d16_0_down 
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_0_down $d22_0_down $d23_0_down $d24_0_down $d25_0_down $d26_0_down
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_0_down $d32_0_down $d33_0_down $d34_0_down $d35_0_down $d36_0_down
+
+   echo "d for spin down at omege = $w_energy eV"
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_1_down $d12_1_down $d13_1_down $d14_1_down $d15_1_down $d16_1_down
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_1_down $d22_1_down $d23_1_down $d24_1_down $d25_1_down $d26_1_down
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_1_down $d32_1_down $d33_1_down $d34_1_down $d35_1_down $d36_1_down
+
+   cd ../out_lin
+
+   e11_0_down=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_xx_down.dat)
+   e22_0_down=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_yy_down.dat)
+   e33_0_down=$(awk 'NR=='8' {printf("%.5f\n", $3*1) }' lin_zz_down.dat)
+
+   e11_iw_down=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_xx_down.dat)
+   e22_iw_down=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_yy_down.dat)
+   e33_iw_down=$(awk 'NR=='$n_we' {printf("%.5f\n", $2*1) }' lin_zz_down.dat)
+
+   e11_rw_down=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_xx_down.dat)
+   e22_rw_down=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_yy_down.dat)
+   e33_rw_down=$(awk 'NR=='$n_we' {printf("%.5f\n", $3*1) }' lin_zz_down.dat)
+
+   n11_0_down=$(echo "scale=5; sqrt((sqrt($e11_0_down^2)+$e11_0_down)/2)" |bc)
+   n22_0_down=$(echo "scale=5; sqrt((sqrt($e22_0_down^2)+$e22_0_down)/2)" |bc)
+   n33_0_down=$(echo "scale=5; sqrt((sqrt($e33_0_down^2)+$e33_0_down)/2)" |bc)
+
+   n11_w_down=$(echo "scale=5; sqrt((sqrt($e11_iw_down^2+$e11_rw_down^2)+$e11_rw_down)/2)" |bc)
+   n22_w_down=$(echo "scale=5; sqrt((sqrt($e22_iw_down^2+$e22_rw_down^2)+$e22_rw_down)/2)" |bc)
+   n33_w_down=$(echo "scale=5; sqrt((sqrt($e33_iw_down^2+$e33_rw_down^2)+$e33_rw_down)/2)" |bc)
+
+   #birefringence
+   a=$n11_0_down
+   b=$n22_0_down
+   c=$n33_0_down
+
+   if [ $(echo "$a > $b" | bc) = 1 ];then
+      t=$a;a=$b;b=$t;
+   fi
+
+   if [ $(echo "$a > $c" | bc) = 1 ];then
+      t=$a;a=$c;c=$t;
+   fi
+
+   if [ $(echo "$b > $c" | bc) = 1 ];then
+      t=$b;b=$c;c=$t;
+   fi
+
+   delta_n_down=$(echo "scale=5; $c-$a" |bc)
+
+   #birefringence
+   a=$n11_w_down
+   b=$n22_w_down
+   c=$n33_w_down
+
+   if [ $(echo "$a > $b" | bc) = 1 ];then
+      t=$a;a=$b;b=$t;
+   fi
+
+   if [ $(echo "$a > $c" | bc) = 1 ];then
+      t=$a;a=$c;c=$t;
+   fi
+
+   if [ $(echo "$b > $c" | bc) = 1 ];then
+      t=$b;b=$c;c=$t;
+   fi
+
+   delta_nw_down=$(echo "scale=5; $c-$a" |bc)
+
+   echo "linear optic epsilon for spin down at 0 eV"
+   printf "%.3f %.3f %.3f \n" $e11_0_down $e22_0_down $e33_0_down
+   echo "refractive n for spin down at 0 eV"
+   printf "%.3f %.3f %.3f \n" $n11_0_down $n22_0_down $n33_0_down
+   echo "birefringence for spin down at 0 eV" 
+   printf "%.3f \n" $delta_n_down
+   echo "refractive n for spin down at $w_energy eV"
+   printf "%.3f %.3f %.3f \n" $n11_w_down $n22_w_down $n33_w_down
+   echo "birefringence for spin down at $w_energy eV" 
+   printf "%.3f \n" $delta_nw_down
+
+   cd ../
+
+   echo "deff for spin down at omege = 0 eV" >> result_down.re
+   printf "%.3f \n" $deff_0_down >> result_down.re
+   echo " " >> result_down.re
+
+   echo "deff for spin down at omege = 1.167 eV" >> result_down.re
+   printf "%.3f \n" $deff_1_down >> result_down.re
+   echo " " >> result_down.re
+
+   echo "d for spin down at omege = 0 eV" >> result_down.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_0_down $d12_0_down $d13_0_down $d14_0_down $d15_0_down $d16_0_down >> result_down.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_0_down $d22_0_down $d23_0_down $d24_0_down $d25_0_down $d26_0_down >> result_down.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_0_down $d32_0_down $d33_0_down $d34_0_down $d35_0_down $d36_0_down >> result_down.re
+   echo " ">> result_down.re
+
+   echo "d for spin down at omege = $w_energy eV" >> result_down.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d11_1_down $d12_1_down $d13_1_down $d14_1_down $d15_1_down $d16_1_down >> result_down.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d21_1_down $d22_1_down $d23_1_down $d24_1_down $d25_1_down $d26_1_down >> result_down.re
+   printf "%.3f %.3f %.3f %.3f %.3f %.3f\n" $d31_1_down $d32_1_down $d33_1_down $d34_1_down $d35_1_down $d36_1_down >> result_down.re
+
+   echo " " >> result_down.re
+   echo "linear optic epsilon for spin down at 0 eV" >> result_down.re
+   printf "%.3f %.3f %.3f \n" $e11_0_down $e22_0_down $e33_0_down >> result_down.re
+
+   echo " " >> result_down.re
+   echo "refractive n for spin down at 0 eV" >> result_down.re
+   printf "%.3f %.3f %.3f \n" $n11_0_down $n22_0_down $n33_0_down >> result_down.re
+
+   echo " " >> result_down.re
+   echo "birefringence for spin down at 0 eV" >> result_down.re
+   printf "%.3f \n" $delta_n_down >> result_down.re
+
+   echo " " >> result_down.re
+   echo "refractive n for spin down at $w_energy eV" >> result_down.re
+   printf "%.3f %.3f %.3f \n" $n11_w_down $n22_w_down $n33_w_down >> result_down.re
+
+   echo " " >> result_down.re
+   echo "birefringence for spin down at $w_energy eV"  >> result_down.re
+   printf "%.3f \n" $delta_nw_down  >> result_down.re
+else
+   cd ../
+fi

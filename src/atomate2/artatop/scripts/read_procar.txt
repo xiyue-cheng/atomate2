@@ -1,0 +1,36 @@
+#!/bin/sh
+#read_procar
+
+nk=$(awk 'NR=='2' {print $4}' PROCAR)
+nband=$(awk 'NR=='2' {print $8}' PROCAR)
+nion=$(awk 'NR=='2' {print $12}' PROCAR)
+efermi=$(grep "E-fermi" OUTCAR | tail -1 | awk '{print $3}')
+
+grep band PROCAR > temp1
+for i in $(seq $nband)
+do
+#e_tot=0.0
+  grep "\<$i # energy\>" temp1 > temp2
+  for j in $(seq $nk)
+  do
+    e_j=$(awk 'NR=='$j' {print $5}' temp2)
+    e_bandj=$( echo "scale=3; $e_j - $efermi" |bc )
+    #e_tot=$( echo "scale=3; $e_tot + $e_band - $efermi" |bc )
+    echo $j $e_bandj >> e-temp
+  done
+    #e_ave=$( echo "scale=3; $e_tot / $nk" |bc )
+    e_max=$(cat e-temp| sort -n -k 2 | tail -1 | awk '{print $2}')
+    e_min=$(cat e-temp| sort -n -k 2 | head -1 | awk '{print $2}')
+    if [ $(awk -v x=$e_bandj 'BEGIN{print(x<0)?"1":"0"}') -eq 1 ];then
+      #VB
+      e_prf=$e_max
+    else
+      #CB
+      e_prf=$e_min
+    fi
+      echo $i $e_prf $e_max $e_min>> energy-band.dat
+      echo     
+   rm e-temp
+done
+rm temp1 temp2
+

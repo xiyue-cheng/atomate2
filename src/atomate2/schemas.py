@@ -96,6 +96,21 @@ class OrbitalContribution(BaseModel):
     valence: float
     conduction: float 
 
+class BandEnergyInfo(BaseModel):
+    band_index: int
+    e_prf: float
+    e_max: float
+    e_min: float
+    
+class DshgBandContribution(BaseModel):
+    band_index: int
+    im_total: float
+    re_total: float
+    im_vb: float
+    re_vb: float
+    im_cb: float
+    re_cb: float
+
 class ArtatopInputModel(BaseModel):
     """Definition of input settings for the ARTATOP computation."""
 
@@ -150,19 +165,20 @@ class ArtatopOutputModel(BaseModel):
     birefringence: Optional[list[BirefringenceValues]]
 
     # Spin-resolved (optional)
-    #linear_response_up: Optional[list[LinearOpticalResponse]] = None
-    #linear_response_down: Optional[list[LinearOpticalResponse]] = None
-    #d_tensor_up: Optional[list[DTensorValues]] = None
-    #d_tensor_down: Optional[list[DTensorValues]] = None
-    #deff_values_up: Optional[list[DeffValues]] = None
-    #deff_values_down: Optional[list[DeffValues]] = None
-    #birefringence_up: Optional[list[BirefringenceValues]] = None
-    #birefringence_down: Optional[list[BirefringenceValues]] = None
+    linear_response_up: Optional[list[LinearOpticalResponse]] = None
+    linear_response_down: Optional[list[LinearOpticalResponse]] = None
+    d_tensor_up: Optional[list[DTensorValues]] = None
+    d_tensor_down: Optional[list[DTensorValues]] = None
+    deff_values_up: Optional[list[DeffValues]] = None
+    deff_values_down: Optional[list[DeffValues]] = None
+    birefringence_up: Optional[list[BirefringenceValues]] = None
+    birefringence_down: Optional[list[BirefringenceValues]] = None
 
     # Atomic contributions (added later)
     atomic_contributions: Optional[list[AtomicContributions]] = None
     
-   
+    band_energy_info: Optional[List[BandEnergyInfo]] = None
+    dshg_summary: Optional[List[DshgBandContribution]] = None
 
     last_updated: str = Field(
         default_factory=datetime_str,
@@ -189,7 +205,7 @@ class ArtatopOutputModel(BaseModel):
         atomic_contribs = parse_orbital_atomic_contributions(structure, Path(dir_name) / "out_nonlin")
 
         # Save .IND file
-        #write_result_art_IND(atomic_contribs, filename=Path(dir_name) / "result.art_IND")
+        write_result_art_IND(atomic_contribs, filename=Path(dir_name) / "result.art_IND")
 
         return cls(
             dir_name=str(dir_path),
@@ -215,7 +231,8 @@ class ArtatopOutputModel(BaseModel):
             birefringence_down=lin["down"]["birefringence"] if lin.get("down") else None,
 
             atomic_contributions=atomic_contribs,
-            
+            band_energy_info=band_energy_info,
+            dshg_summary=dshg_data,
         )
     def save_to_json(self, filename: str) -> None:
         """Save the task document as a compressed JSON file."""

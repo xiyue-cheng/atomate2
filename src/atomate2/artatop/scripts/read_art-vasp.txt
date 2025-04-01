@@ -1,0 +1,480 @@
+#!/bin/sh
+# read_art-vasp_input
+
+echo -n "Please enter the number of atom type (<=20)  ->"
+read n_at
+
+echo -n "Please enter the name of each atom type with correct order ->"
+read e1 e2 e3 e4 e5 e6 e7 e8 e9 e10 e11 e12 e13 e14 e15 e16 e17 e18 e19 e20 
+
+echo -n "Please enter the number of atoms for each atom type ->"
+read a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 a20
+
+echo -n "Please enter the number of orbitals:3(spd) 4(spdf) 9(lorbit=11) ->"
+read o
+
+#For htop
+cd out_nonlin
+
+ls arp_nshg_* | awk -F '_' '{print "cp " $0 " " $1 "-"$2".dat"}'|bash #arp-nshg.dat
+ls arp_shg_val_* | awk -F '_' '{print "cp " $0 " " $1 "-"$3".dat"}'|bash #arp-val.dat
+ls arp_shg_con_* | awk -F '_' '{print "cp " $0 " " $1 "-"$3".dat"}'|bash #arp-con.dat
+ls arp_dshg_* | awk -F '_' '{print "cp " $0 " " $1 "-"$2".dat"}'|bash #arp-dshg.dat
+
+#esu to Pm/V
+sed -i '1d' arp-nshg.dat
+awk ' {print $1, $3*4/3*3.14*10/2} ' arp-nshg.dat > d-PmV.dat
+sed -i '1d' arp-dshg.dat
+awk ' {print $1, $3*4/3*3.14*10/2} ' arp-dshg.dat > dshg-PmV.dat
+
+sed -e '1,9d' arp_nonlin.txt > temp_all 
+sed -i '$d' temp_all
+sed -e '1d' arp-val.dat > temp_vb
+sed -e '1d' arp-con.dat > temp_cb
+
+tot=$(awk '{ sum += $3*1};END {printf ("%.5f\n", sum) }' temp_all)
+
+if [ $o -eq 3 ]; then
+#echo $tot
+  echo "Type" "Natom" "IND" "TOT" "VB" "CB" "VB_s" "VB_p" "VB_d" "CB_s" "CB_p" "CB_d" "TOT_s" "TOT_p" "TOT_d" >> result.art_TOT
+  echo "Type" "Natom" "IND" "TOT" "VB" "CB" "VB_s" "VB_p" "VB_d" "CB_s" "CB_p" "CB_d" "TOT_s" "TOT_p" "TOT_d" >> result.art_IND
+  k=1 #number atom
+  m=1 #atom type
+
+  for x in $(seq $n_at) #for different atom type
+  do
+    a_temp=a${x} 
+    eval a=$(echo \$$a_temp)
+    e_temp=e${x}
+    eval e=$(echo \$$e_temp)
+
+  occ_s_a=0; occ_p_a=0; occ_d_a=0;
+  vb_s_a=0; vb_p_a=0; vb_d_a=0;
+  cb_s_a=0; cb_p_a=0; cb_d_a=0;
+
+    for i in $(seq $a) #for atoms
+    do
+      for y in $(seq $o) #for orbitals
+      do
+        sed -n '1p' temp_all >> temp_$k
+        sed -i '1d' temp_all
+        sed -n '1p' temp_vb >> temp_vb_$k
+        sed -i '1d' temp_vb
+        sed -n '1p' temp_cb >> temp_cb_$k
+        sed -i '1d' temp_cb
+      done
+
+    #tot   
+      s=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_$k)
+      p=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_$k)
+      d=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_$k)
+
+      occ_s_k=`echo "scale=4; 100*$s/$tot "|bc -l`
+      occ_p_k=`echo "scale=4; 100*$p/$tot "|bc -l`
+      occ_d_k=`echo "scale=4; 100*$d/$tot "|bc -l`
+
+      occ_s_a=`echo "scale=4;  $occ_s_a+$occ_s_k "|bc -l`
+      occ_p_a=`echo "scale=4;  $occ_p_a+$occ_p_k "|bc -l`
+      occ_d_a=`echo "scale=4;  $occ_d_a+$occ_d_k "|bc -l`
+
+    #vb
+      s_vb=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_vb_$k)
+      p_vb=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+      d_vb=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} '  temp_vb_$k)
+
+      vb_s_k=`echo "scale=4; 100*$s_vb/$tot "|bc -l`
+      vb_p_k=`echo "scale=4; 100*$p_vb/$tot "|bc -l`
+      vb_d_k=`echo "scale=4; 100*$d_vb/$tot "|bc -l`
+
+      vb_s_a=`echo "scale=4;  $vb_s_a+$vb_s_k "|bc -l`
+      vb_p_a=`echo "scale=4;  $vb_p_a+$vb_p_k "|bc -l`
+      vb_d_a=`echo "scale=4;  $vb_d_a+$vb_d_k "|bc -l`
+
+    #cb
+      s_cb=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_cb_$k)
+      p_cb=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+      d_cb=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+
+      cb_s_k=`echo "scale=4; 100*$s_cb/$tot "|bc -l`
+      cb_p_k=`echo "scale=4; 100*$p_cb/$tot "|bc -l`
+      cb_d_k=`echo "scale=4; 100*$d_cb/$tot "|bc -l`
+
+      cb_s_a=`echo "scale=4;  $cb_s_a+$cb_s_k "|bc -l`
+      cb_p_a=`echo "scale=4;  $cb_p_a+$cb_p_k "|bc -l`
+      cb_d_a=`echo "scale=4;  $cb_d_a+$cb_d_k "|bc -l`
+
+      echo $k $occ_s_k $occ_p_k $occ_d_k >> shg_atom-tot
+      echo $k $vb_s_k $vb_p_k $vb_d_k >> shg_atom-vb
+      echo $k $cb_s_k $cb_p_k $cb_d_k >> shg_atom-cb
+
+        k=$(( $k + 1 ))
+    done
+    
+    tot_a=`echo "scale=4;  $occ_s_a+$occ_p_a+$occ_d_a "|bc -l`
+    vb_a=`echo "scale=4;  $vb_s_a+$vb_p_a+$vb_d_a "|bc -l`
+    cb_a=`echo "scale=4;  $cb_s_a+$cb_p_a+$cb_d_a "|bc -l`
+    in_a=`echo "scale=4;  $tot_a/$a "|bc -l`
+
+    in_a_vb=`echo "scale=4;  $vb_a/$a "|bc -l`
+    in_a_cb=`echo "scale=4;  $cb_a/$a "|bc -l`
+
+    in_vb_s_a=`echo "scale=4;  $vb_s_a/$a "|bc -l`
+    in_vb_p_a=`echo "scale=4;  $vb_p_a/$a "|bc -l`
+    in_vb_d_a=`echo "scale=4;  $vb_d_a/$a "|bc -l`
+    in_cb_s_a=`echo "scale=4;  $cb_s_a/$a "|bc -l`
+    in_cb_p_a=`echo "scale=4;  $cb_p_a/$a "|bc -l`
+    in_cb_d_a=`echo "scale=4;  $cb_d_a/$a "|bc -l`
+    in_occ_s_a=`echo "scale=4;  $occ_s_a/$a "|bc -l`
+    in_occ_p_a=`echo "scale=4;  $occ_p_a/$a "|bc -l`
+    in_occ_d_a=`echo "scale=4;  $occ_d_a/$a "|bc -l`
+
+    echo $x $e $occ_s_a $occ_p_a $occ_d_a >> shg_tot  
+    echo $x $e $vb_s_a $vb_p_a $vb_d_a >> shg_vb
+    echo $x $e $cb_s_a $cb_p_a $cb_d_a >> shg_cb
+
+    echo $e $a $in_a $tot_a $vb_a $cb_a $vb_s_a $vb_p_a $vb_d_a $cb_s_a $cb_p_a $cb_d_a $occ_s_a $occ_p_a $occ_d_a >>  result.art_TOT
+
+    echo $e $a $in_a $tot_a $in_a_vb $in_a_cb $in_vb_s_a $in_vb_p_a $in_vb_d_a $in_cb_s_a $in_cb_p_a $in_cb_d_a $in_occ_s_a $in_occ_p_a $in_occ_d_a >>  result.art_IND
+
+  #printf "%f %s %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f %.5f\n" $x $e $vb_s_a $vb_p_a $vb_d_a $cb_s_a $cb_p_a $cb_d_a $occ_s_a $occ_p_a $occ_d_a $tot_a>>  result.art
+
+  done
+fi
+
+#f electrons
+if [ $o -eq 4 ]; then
+#echo $tot
+  echo "Type" "Natom" "IND" "TOT" "VB" "CB" "VB_s" "VB_p" "VB_d" "VB_f" "CB_s" "CB_p" "CB_d" "CB_f" "TOT_s" "TOT_p" "TOT_d" "TOT_f">> result.art_TOT
+  echo "Type" "Natom" "IND" "TOT" "VB" "CB" "VB_s" "VB_p" "VB_d" "VB_f" "CB_s" "CB_p" "CB_d" "CB_f" "TOT_s" "TOT_p" "TOT_d" "TOT_f">> result.art_IND
+  k=1 #number atom
+  m=1 #atom type
+
+  for x in $(seq $n_at) #for different atom type
+  do
+    a_temp=a${x} 
+    eval a=$(echo \$$a_temp)
+    e_temp=e${x}
+    eval e=$(echo \$$e_temp)
+
+  occ_s_a=0; occ_p_a=0; occ_d_a=0; occ_f_a=0;
+  vb_s_a=0; vb_p_a=0; vb_d_a=0; vb_f_a=0;
+  cb_s_a=0; cb_p_a=0; cb_d_a=0; cb_f_a=0;
+
+    for i in $(seq $a) #for atoms
+    do
+      for y in $(seq $o) #for orbitals
+      do
+        sed -n '1p' temp_all >> temp_$k
+        sed -i '1d' temp_all
+        sed -n '1p' temp_vb >> temp_vb_$k
+        sed -i '1d' temp_vb
+        sed -n '1p' temp_cb >> temp_cb_$k
+        sed -i '1d' temp_cb
+      done
+
+    #tot   
+      s=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_$k)
+      p=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_$k)
+      d=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_$k)
+      f=$(awk 'NR=='4' {printf("%.5f\n", $3*1)} ' temp_$k)
+
+      occ_s_k=`echo "scale=4; 100*$s/$tot "|bc -l`
+      occ_p_k=`echo "scale=4; 100*$p/$tot "|bc -l`
+      occ_d_k=`echo "scale=4; 100*$d/$tot "|bc -l`
+      occ_f_k=`echo "scale=4; 100*$f/$tot "|bc -l`
+
+      occ_s_a=`echo "scale=4;  $occ_s_a+$occ_s_k "|bc -l`
+      occ_p_a=`echo "scale=4;  $occ_p_a+$occ_p_k "|bc -l`
+      occ_d_a=`echo "scale=4;  $occ_d_a+$occ_d_k "|bc -l`
+      occ_f_a=`echo "scale=4;  $occ_f_a+$occ_f_k "|bc -l`
+
+    #vb
+      s_vb=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_vb_$k)
+      p_vb=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+      d_vb=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} '  temp_vb_$k)
+      f_vb=$(awk 'NR=='4' {printf("%.5f\n", $3*1)} '  temp_vb_$k)
+
+      vb_s_k=`echo "scale=4; 100*$s_vb/$tot "|bc -l`
+      vb_p_k=`echo "scale=4; 100*$p_vb/$tot "|bc -l`
+      vb_d_k=`echo "scale=4; 100*$d_vb/$tot "|bc -l`
+      vb_f_k=`echo "scale=4; 100*$f_vb/$tot "|bc -l`
+
+      vb_s_a=`echo "scale=4;  $vb_s_a+$vb_s_k "|bc -l`
+      vb_p_a=`echo "scale=4;  $vb_p_a+$vb_p_k "|bc -l`
+      vb_d_a=`echo "scale=4;  $vb_d_a+$vb_d_k "|bc -l`
+      vb_f_a=`echo "scale=4;  $vb_f_a+$vb_f_k "|bc -l`
+
+    #cb
+      s_cb=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_cb_$k)
+      p_cb=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+      d_cb=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+      f_cb=$(awk 'NR=='4' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+
+      cb_s_k=`echo "scale=4; 100*$s_cb/$tot "|bc -l`
+      cb_p_k=`echo "scale=4; 100*$p_cb/$tot "|bc -l`
+      cb_d_k=`echo "scale=4; 100*$d_cb/$tot "|bc -l`
+      cb_f_k=`echo "scale=4; 100*$f_cb/$tot "|bc -l`
+
+      cb_s_a=`echo "scale=4;  $cb_s_a+$cb_s_k "|bc -l`
+      cb_p_a=`echo "scale=4;  $cb_p_a+$cb_p_k "|bc -l`
+      cb_d_a=`echo "scale=4;  $cb_d_a+$cb_d_k "|bc -l`
+      cb_f_a=`echo "scale=4;  $cb_f_a+$cb_f_k "|bc -l`
+
+      echo $k $occ_s_k $occ_p_k $occ_d_k $occ_f_k>> shg_atom-tot
+      echo $k $vb_s_k $vb_p_k $vb_d_k $vb_f_k >> shg_atom-vb
+      echo $k $cb_s_k $cb_p_k $cb_d_k $cb_f_k >> shg_atom-cb
+
+      k=$(( $k + 1 ))
+    done
+    
+    tot_a=`echo "scale=4;  $occ_s_a+$occ_p_a+$occ_d_a+$occ_f_a "|bc -l`
+    vb_a=`echo "scale=4;  $vb_s_a+$vb_p_a+$vb_d_a+$vb_f_a "|bc -l`
+    cb_a=`echo "scale=4;  $cb_s_a+$cb_p_a+$cb_d_a+$cb_f_a "|bc -l`
+    in_a=`echo "scale=4;  $tot_a/$a "|bc -l`
+
+    in_a_vb=`echo "scale=4;  $vb_a/$a "|bc -l`
+    in_a_cb=`echo "scale=4;  $cb_a/$a "|bc -l`
+
+    in_vb_s_a=`echo "scale=4;  $vb_s_a/$a "|bc -l`
+    in_vb_p_a=`echo "scale=4;  $vb_p_a/$a "|bc -l`
+    in_vb_d_a=`echo "scale=4;  $vb_d_a/$a "|bc -l`
+    in_vb_f_a=`echo "scale=4;  $vb_f_a/$a "|bc -l`    
+    in_cb_s_a=`echo "scale=4;  $cb_s_a/$a "|bc -l`
+    in_cb_p_a=`echo "scale=4;  $cb_p_a/$a "|bc -l`
+    in_cb_d_a=`echo "scale=4;  $cb_d_a/$a "|bc -l`
+    in_cb_f_a=`echo "scale=4;  $cb_f_a/$a "|bc -l`
+    in_occ_s_a=`echo "scale=4;  $occ_s_a/$a "|bc -l`
+    in_occ_p_a=`echo "scale=4;  $occ_p_a/$a "|bc -l`
+    in_occ_d_a=`echo "scale=4;  $occ_d_a/$a "|bc -l`
+    in_occ_f_a=`echo "scale=4;  $occ_f_a/$a "|bc -l`
+
+    echo $x $e $occ_s_a $occ_p_a $occ_d_a $occ_f_a >> shg_tot  
+    echo $x $e $vb_s_a $vb_p_a $vb_d_a $vb_f_a >> shg_vb
+    echo $x $e $cb_s_a $cb_p_a $cb_d_a $cb_f_a >> shg_cb
+
+    echo $e $a $in_a $tot_a $vb_a $cb_a $vb_s_a $vb_p_a $vb_d_a $vb_f_a $cb_s_a $cb_p_a $cb_d_a $cb_f_a $occ_s_a $occ_p_a $occ_d_a $occ_f_a>>  result.art_TOT
+
+    echo $e $a $in_a $tot_a $in_a_vb $in_a_cb $in_vb_s_a $in_vb_p_a $in_vb_d_a $in_vb_f_a $in_cb_s_a $in_cb_p_a $in_cb_d_a $in_cb_f_a $in_occ_s_a $in_occ_p_a $in_occ_d_a $in_occ_f_a>>  result.art_IND
+
+  done
+fi
+
+if [ $o -eq 9 ]; then
+  echo "Type" "Natom" "IND" "TOT" "VB" "CB" "VB_s" "VB_p" "VB_d" "CB_s" "CB_p" "CB_d" "TOT_s" "TOT_p" "TOT_d" >> result.art_TOT
+  echo "Type" "Natom" "IND" "TOT" "VB" "CB" "VB_s" "VB_p" "VB_d" "CB_s" "CB_p" "CB_d" "TOT_s" "TOT_p" "TOT_d" >> result.art_IND
+  echo "Type" "Natom" "VB" "VB_s" "VB_py" "VB_pz" "VB_px" "VB_dxy" "VB_dyz" "VB_dz2" "VB_dxz" "VB_dx2-y2" >> result.art_vblorbit
+  echo "Type" "Natom" "CB" "CB_s" "CB_py" "CB_pz" "CB_px" "CB_dxy" "CB_dyz" "CB_dz2" "CB_dxz" "CB_dx2-y2" >> result.art_cblorbit
+  k=1 #number atom
+  m=1 #atom type
+
+  for x in $(seq $n_at) #for different atom type
+  do
+
+    a_temp=a${x} 
+    eval a=$(echo \$$a_temp)
+    e_temp=e${x}
+    eval e=$(echo \$$e_temp)
+
+    #  echo $a
+
+    occ_s_a=0; occ_p_a=0; occ_d_a=0;
+    occ_px_a=0; occ_py_a=0; occ_pz_a=0;
+    occ_d1_a=0; occ_d2_a=0; occ_d3_a=0; occ_d4_a=0; occ_d5_a=0; 
+
+    vb_s_a=0; vb_p_a=0; vb_d_a=0;
+    vb_px_a=0; vb_py_a=0; vb_pz_a=0;
+    vb_d1_a=0; vb_d2_a=0; vb_d3_a=0; vb_d4_a=0; vb_d5_a=0;
+
+    cb_s_a=0; cb_p_a=0; cb_d_a=0;
+    cb_px_a=0; cb_py_a=0; cb_pz_a=0;
+    cb_d1_a=0; cb_d2_a=0; cb_d3_a=0; cb_d4_a=0; cb_d5_a=0; 
+
+    for i in $(seq $a) #for atoms
+    do
+      for y in $(seq $o) #for orbitals
+      do
+        sed -n '1p' temp_all >> temp_$k
+        sed -i '1d' temp_all
+        sed -n '1p' temp_vb >> temp_vb_$k
+        sed -i '1d' temp_vb
+        sed -n '1p' temp_cb >> temp_cb_$k
+        sed -i '1d' temp_cb
+      done
+
+      #tot
+          s=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_$k)
+          py=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_$k)
+          pz=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_$k)
+          px=$(awk 'NR=='4' {printf("%.5f\n", $3*1)} ' temp_$k)
+
+          occ_s_k=`echo "scale=4; 100*$s/$tot "|bc -l`
+          occ_p_k=`echo "scale=4; 100*($px+$py+$pz)/$tot "|bc -l`
+          occ_px_k=`echo "scale=4; 100*($px)/$tot "|bc -l`
+          occ_py_k=`echo "scale=4; 100*($py)/$tot "|bc -l`
+          occ_pz_k=`echo "scale=4; 100*($pz)/$tot "|bc -l`
+
+          occ_s_a=`echo "scale=4;  $occ_s_a+$occ_s_k "|bc -l`
+          occ_p_a=`echo "scale=4;  $occ_p_a+$occ_p_k "|bc -l`
+          occ_px_a=`echo "scale=4;  $occ_px_a+$occ_px_k "|bc -l`
+          occ_py_a=`echo "scale=4;  $occ_py_a+$occ_py_k "|bc -l`
+          occ_pz_a=`echo "scale=4;  $occ_pz_a+$occ_pz_k "|bc -l`
+
+          d1=$(awk 'NR=='5' {printf("%.5f\n", $3*1)} ' temp_$k)
+          d2=$(awk 'NR=='6' {printf("%.5f\n", $3*1)} ' temp_$k)
+          d3=$(awk 'NR=='7' {printf("%.5f\n", $3*1)} ' temp_$k)
+          d4=$(awk 'NR=='8' {printf("%.5f\n", $3*1)} ' temp_$k)
+          d5=$(awk 'NR=='9' {printf("%.5f\n", $3*1)} ' temp_$k)
+
+          occ_d_k=`echo "scale=4; 100*($d1+$d2+$d3+$d4+$d5)/$tot "|bc -l`
+          occ_d1_k=`echo "scale=4; 100*($d1)/$tot "|bc -l`
+          occ_d2_k=`echo "scale=4; 100*($d2)/$tot "|bc -l`
+          occ_d3_k=`echo "scale=4; 100*($d3)/$tot "|bc -l`
+          occ_d4_k=`echo "scale=4; 100*($d4)/$tot "|bc -l`
+          occ_d5_k=`echo "scale=4; 100*($d5)/$tot "|bc -l`
+
+          occ_d_a=`echo "scale=4; $occ_d_a+$occ_d_k "|bc -l`
+          occ_d1_a=`echo "scale=4; $occ_d1_a+$occ_d1_k "|bc -l`
+          occ_d2_a=`echo "scale=4; $occ_d2_a+$occ_d2_k "|bc -l`
+          occ_d3_a=`echo "scale=4; $occ_d3_a+$occ_d3_k "|bc -l`
+          occ_d4_a=`echo "scale=4; $occ_d4_a+$occ_d4_k "|bc -l`
+          occ_d5_a=`echo "scale=4; $occ_d5_a+$occ_d5_k "|bc -l`
+
+      #vb
+
+          s_vb=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_vb_$k)
+          py_vb=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+          pz_vb=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+          px_vb=$(awk 'NR=='4' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+
+          vb_s_k=`echo "scale=4; 100*$s_vb/$tot "|bc -l`
+          vb_p_k=`echo "scale=4; 100*($px_vb+$py_vb+$pz_vb)/$tot "|bc -l`
+          vb_px_k=`echo "scale=4; 100*($px_vb)/$tot "|bc -l`
+          vb_py_k=`echo "scale=4; 100*($py_vb)/$tot "|bc -l`
+          vb_pz_k=`echo "scale=4; 100*($pz_vb)/$tot "|bc -l`
+
+          vb_s_a=`echo "scale=4;  $vb_s_a+$vb_s_k "|bc -l`
+          vb_p_a=`echo "scale=4;  $vb_p_a+$vb_p_k "|bc -l`
+          vb_px_a=`echo "scale=4;  $vb_px_a+$vb_px_k "|bc -l`
+          vb_py_a=`echo "scale=4;  $vb_py_a+$vb_py_k "|bc -l`
+          vb_pz_a=`echo "scale=4;  $vb_pz_a+$vb_pz_k "|bc -l`
+
+          d1_vb=$(awk 'NR=='5' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+          d2_vb=$(awk 'NR=='6' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+          d3_vb=$(awk 'NR=='7' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+          d4_vb=$(awk 'NR=='8' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+          d5_vb=$(awk 'NR=='9' {printf("%.5f\n", $3*1)} ' temp_vb_$k)
+
+          vb_d_k=`echo "scale=4; 100*($d1_vb+$d2_vb+$d3_vb+$d4_vb+$d5_vb)/$tot "|bc -l`
+          vb_d1_k=`echo "scale=4; 100*($d1_vb)/$tot "|bc -l`
+          vb_d2_k=`echo "scale=4; 100*($d2_vb)/$tot "|bc -l`
+          vb_d3_k=`echo "scale=4; 100*($d3_vb)/$tot "|bc -l`
+          vb_d4_k=`echo "scale=4; 100*($d4_vb)/$tot "|bc -l`
+          vb_d5_k=`echo "scale=4; 100*($d5_vb)/$tot "|bc -l`
+
+          vb_d_a=`echo "scale=4; $vb_d_a+$vb_d_k "|bc -l`
+          vb_d1_a=`echo "scale=4; $vb_d1_a+$vb_d1_k "|bc -l`
+          vb_d2_a=`echo "scale=4; $vb_d2_a+$vb_d2_k "|bc -l`
+          vb_d3_a=`echo "scale=4; $vb_d3_a+$vb_d3_k "|bc -l`
+          vb_d4_a=`echo "scale=4; $vb_d4_a+$vb_d4_k "|bc -l`
+          vb_d5_a=`echo "scale=4; $vb_d5_a+$vb_d5_k "|bc -l`
+
+      #cb
+          s_cb=$(awk 'NR=='1' {printf("%.5f\n", $3*1)} '  temp_cb_$k)
+          py_cb=$(awk 'NR=='2' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+          pz_cb=$(awk 'NR=='3' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+          px_cb=$(awk 'NR=='4' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+
+          cb_s_k=`echo "scale=4; 100*$s_cb/$tot "|bc -l`
+          cb_p_k=`echo "scale=4; 100*($px_cb+$py_cb+$pz_cb)/$tot "|bc -l`
+          cb_px_k=`echo "scale=4; 100*($px_cb)/$tot "|bc -l`
+          cb_py_k=`echo "scale=4; 100*($py_cb)/$tot "|bc -l`
+          cb_pz_k=`echo "scale=4; 100*($pz_cb)/$tot "|bc -l`
+
+          cb_s_a=`echo "scale=4;  $cb_s_a+$cb_s_k "|bc -l`
+          cb_p_a=`echo "scale=4;  $cb_p_a+$cb_p_k "|bc -l`
+          cb_px_a=`echo "scale=4;  $cb_px_a+$cb_px_k "|bc -l`
+          cb_py_a=`echo "scale=4;  $cb_py_a+$cb_py_k "|bc -l`
+          cb_pz_a=`echo "scale=4;  $cb_pz_a+$cb_pz_k "|bc -l`
+
+          d1_cb=$(awk 'NR=='5' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+          d2_cb=$(awk 'NR=='6' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+          d3_cb=$(awk 'NR=='7' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+          d4_cb=$(awk 'NR=='8' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+          d5_cb=$(awk 'NR=='9' {printf("%.5f\n", $3*1)} ' temp_cb_$k)
+
+          cb_d_k=`echo "scale=4; 100*($d1_cb+$d2_cb+$d3_cb+$d4_cb+$d5_cb)/$tot "|bc -l`
+          cb_d1_k=`echo "scale=4; 100*($d1_cb)/$tot "|bc -l`
+          cb_d2_k=`echo "scale=4; 100*($d2_cb)/$tot "|bc -l`
+          cb_d3_k=`echo "scale=4; 100*($d3_cb)/$tot "|bc -l`
+          cb_d4_k=`echo "scale=4; 100*($d4_cb)/$tot "|bc -l`
+          cb_d5_k=`echo "scale=4; 100*($d5_cb)/$tot "|bc -l`
+
+          cb_d_a=`echo "scale=4; $cb_d_a+$cb_d_k "|bc -l`
+          cb_d1_a=`echo "scale=4; $cb_d1_a+$cb_d1_k "|bc -l`
+          cb_d2_a=`echo "scale=4; $cb_d2_a+$cb_d2_k "|bc -l`
+          cb_d3_a=`echo "scale=4; $cb_d3_a+$cb_d3_k "|bc -l`
+          cb_d4_a=`echo "scale=4; $cb_d4_a+$cb_d4_k "|bc -l`
+          cb_d5_a=`echo "scale=4; $cb_d5_a+$cb_d5_k "|bc -l`
+
+          echo $k $occ_s_k $occ_p_k $occ_d_k >> shg_atom-tot
+          echo $k $vb_s_k $vb_p_k $vb_d_k >> shg_atom-vb
+          echo $k $cb_s_k $cb_p_k $cb_d_k >> shg_atom-cb
+
+        k=$(( $k + 1 ))
+    done
+    
+    tot_a=`echo "scale=4;  $occ_s_a+$occ_p_a+$occ_d_a "|bc -l`
+    vb_a=`echo "scale=4;  $vb_s_a+$vb_p_a+$vb_d_a "|bc -l`
+    cb_a=`echo "scale=4;  $cb_s_a+$cb_p_a+$cb_d_a "|bc -l`
+    in_a=`echo "scale=4;  $tot_a/$a "|bc -l`
+
+    in_a_vb=`echo "scale=4;  $vb_a/$a "|bc -l`
+    in_a_cb=`echo "scale=4;  $cb_a/$a "|bc -l`
+
+    in_vb_s_a=`echo "scale=4;  $vb_s_a/$a "|bc -l`
+    in_vb_p_a=`echo "scale=4;  $vb_p_a/$a "|bc -l`
+    in_vb_d_a=`echo "scale=4;  $vb_d_a/$a "|bc -l`
+
+    in_vb_px_a=`echo "scale=4;  $vb_px_a/$a "|bc -l`
+    in_vb_py_a=`echo "scale=4;  $vb_py_a/$a "|bc -l`
+    in_vb_pz_a=`echo "scale=4;  $vb_pz_a/$a "|bc -l`
+    in_vb_d1_a=`echo "scale=4;  $vb_d1_a/$a "|bc -l`
+    in_vb_d2_a=`echo "scale=4;  $vb_d2_a/$a "|bc -l`
+    in_vb_d3_a=`echo "scale=4;  $vb_d3_a/$a "|bc -l`
+    in_vb_d4_a=`echo "scale=4;  $vb_d4_a/$a "|bc -l`
+    in_vb_d5_a=`echo "scale=4;  $vb_d5_a/$a "|bc -l`
+
+    in_cb_s_a=`echo "scale=4;  $cb_s_a/$a "|bc -l`
+    in_cb_p_a=`echo "scale=4;  $cb_p_a/$a "|bc -l`
+    in_cb_d_a=`echo "scale=4;  $cb_d_a/$a "|bc -l`
+
+    in_cb_px_a=`echo "scale=4;  $cb_px_a/$a "|bc -l`
+    in_cb_py_a=`echo "scale=4;  $cb_py_a/$a "|bc -l`
+    in_cb_pz_a=`echo "scale=4;  $cb_pz_a/$a "|bc -l`
+    in_cb_d1_a=`echo "scale=4;  $cb_d1_a/$a "|bc -l`
+    in_cb_d2_a=`echo "scale=4;  $cb_d2_a/$a "|bc -l`
+    in_cb_d3_a=`echo "scale=4;  $cb_d3_a/$a "|bc -l`
+    in_cb_d4_a=`echo "scale=4;  $cb_d4_a/$a "|bc -l`
+    in_cb_d5_a=`echo "scale=4;  $cb_d5_a/$a "|bc -l`
+
+    in_occ_s_a=`echo "scale=4;  $occ_s_a/$a "|bc -l`
+    in_occ_p_a=`echo "scale=4;  $occ_p_a/$a "|bc -l`
+    in_occ_d_a=`echo "scale=4;  $occ_d_a/$a "|bc -l`
+
+    echo $x $e $occ_s_a $occ_p_a $occ_d_a >> shg_tot  
+    echo $x $e $vb_s_a $vb_p_a $vb_d_a >> shg_vb
+    echo $x $e $cb_s_a $cb_p_a $cb_d_a >> shg_cb
+
+    echo $e $a $in_a $tot_a $vb_a $cb_a $vb_s_a $vb_p_a $vb_d_a $cb_s_a $cb_p_a $cb_d_a $occ_s_a $occ_p_a $occ_d_a >>  result.art_TOT
+    echo $e $a $in_a $tot_a $in_a_vb $in_a_cb $in_vb_s_a $in_vb_p_a $in_vb_d_a $in_cb_s_a $in_cb_p_a $in_cb_d_a $in_occ_s_a $in_occ_p_a $in_occ_d_a >>  result.art_IND
+    echo $e $a $in_a_vb $in_vb_s_a $in_vb_py_a $in_vb_pz_a $in_vb_px_a $in_vb_d1_a $in_vb_d2_a $in_vb_d3_a $in_vb_d4_a $in_vb_d5_a >>  result.art11_vborb
+    echo $e $a $in_a_cb $in_cb_s_a $in_cb_py_a $in_cb_pz_a $in_cb_px_a $in_cb_d1_a $in_cb_d2_a $in_cb_d3_a $in_cb_d4_a $in_cb_d5_a >>  result.art11_cborb
+
+  done
+fi
+
+rm temp*
+rm shg_*
+rm arp-con.dat arp-val.dat arp-nshg.dat
+mv result.art_TOT ../
+mv result.art_IND ../

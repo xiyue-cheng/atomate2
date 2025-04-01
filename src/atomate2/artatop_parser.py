@@ -8,6 +8,8 @@ from atomate2.artatop.schemas import (
     DeffValues,
     BirefringenceValues,
     AtomicContributions,
+    BandEnergyInfo,
+    DshgBandContribution,
     ArtatopOutputModel,
 )
 PI = np.pi
@@ -334,11 +336,125 @@ def write_result_art_IND(contributions: list[AtomicContributions], filename: Pat
         for contrib in contributions:
             orb_map = contrib.orbital_contributions
             f.write(f"{contrib.atom:<10} {contrib.total_contribution:10.3f} |"
-                    f"{orb_map.get('s', 0):8.3f}{orb_map.get('p', 0):8.3f}{orb_map.get('d', 0):8.3f}\n")
-                            
+                    f"{orb_map.get('s', 0):8.3f}{orb_map.get('p', 0):8.3f}{orb_map.get('d', 0):8.3f}\n")  
                     
+                    
+def parse_band_structure_energy_info(
+    procar_path: Path,
+    outcar_path: Path,
+    output_file: Path = Path("energy-band.dat")
+) -> list[BandEnergyInfo]:
+    """
+    Parse band energies from PROCAR, align them with the Fermi energy,
+    and write a flat summary file like read_procar.
+    """
+    from monty.io import zopen
+    from atomate2.artatop.schemas import BandEnergyInfo
+
+    # Step 1: Extract E-fermi
+    with open(outcar_path) as f:
+        for line in f:
+            if "E-fermi" in line:
+                efermi = float(line.split()[2])
+                break
+        else:
+            raise ValueError("Fermi energy not found in OUTCAR")
+
+    with zopen(procar_path, "rt") as f:
+        lines = f.readlines()
+
+    energies_by_band = {}
+    current_band = None
+
+    for line in lines:
+        if line.strip().startswith("band"):
+            parts = line.strip().split()
+            band_number = int(parts[1])
+            energy = float(parts[4])
+            energies_by_band.setdefault(band_number, []).append(energy)
+
+    band_infos = []
+
+    with open(output_file, "w") as fout:
+        for band_number, energies in energies_by_band.items():
+            shifted = [round(e - efermi, 3) for e in energies]
+            e_max = max(shifted)
+            e_min = min(shifted)
+            last_energy = shifted[-1]
+            e_prf = e_max if last_energy < 0 else e_min
+
+            fout.write(f"{band_number} {e_prf:.3f} {e_max:.3f} {e_min:.3f}\n")
+            band_infos.append(BandEnergyInfo(
+                band_index=band_number,
+                e_prf=e_prf,
+                e_max=e_max,
+                e_min=e_min
+            ))
+
+    return band_infos 
+
+def process_and_write_dshg_data(
+    total_file: Path,
+    vb_file: Path,
+    cb_file: Path,
+    out_dir: Path
+) -> list[DshgBandContribution]:
+    """
+    Process SHG contributions, write both full and minimal dshg-PmV output files,
+    and return structured data for JSON.
+    """
+
+    def read_data(file_path: Path):
+        data = []
+        with open(file_path) as f:
+            for line in f:
+                if line.strip().startswith("#") or not line.strip():
+                    continue
+                parts = line.split()
+                if len(parts) >= 3:
+                    data.append((float(parts[1]), float(parts[2])))
+        return data
+
+    total_data = read_data(total_file)
+    vb_data = read_data(vb_file)
+    cb_data = read_data(cb_file)
+
+    summary = []
+    full_file = out_dir / "dshg-PmV-full.dat"
+    minimal_file = out_dir / "dshg-PmV.dat"
+
+    with open(full_file, "w") as f_full, open(minimal_file, "w") as f_min:
+        f_full.write(f"# {'Band':<5} {'Im(χ_total)':>12} {'Re(χ_total)':>12}  "
+                     f"{'Im(χ_vb)':>12} {'Re(χ_vb)':>12}  "
+                     f"{'Im(χ_cb)':>12} {'Re(χ_cb)':>12}\n")
+
+        for i, total in enumerate(total_data):
+            im_tot, re_tot = total
+            im_vb, re_vb = vb_data[i] if i < len(vb_data) else (0.0, 0.0)
+            im_cb, re_cb = cb_data[i] if i < len(cb_data) else (0.0, 0.0)
+
+            # Full version
+            f_full.write(f"{i+1:<6} {im_tot:12.6E} {re_tot:12.6E}  "
+                         f"{im_vb:12.6E} {re_vb:12.6E}  "
+                         f"{im_cb:12.6E} {re_cb:12.6E}\n")
+
+            # Minimal version (Im(χ_total) only)
+            f_min.write(f"{i+1} {im_tot:.6f}\n")
+
+            summary.append(DshgBandContribution(
+                band_index=i + 1,
+                im_total=im_tot,
+                re_total=re_tot,
+                im_vb=im_vb,
+                re_vb=re_vb,
+                im_cb=im_cb,
+                re_cb=re_cb
+            ))
+
+    return summary
 def parse_artatop_outputs(dir_name: str, energies: list[float] = [0.0, 0.65, 1.167]) -> ArtatopOutputModel:
     dir_path = Path(dir_name)
+
     # Step 1: parse linear + nonlinear outputs
     lin = parse_linear_response_at_energies(dir_path / "out_lin", energies)
     nlin = parse_nonlinear_response_at_energies(dir_path / "out_nonlin", energies)
@@ -350,7 +466,20 @@ def parse_artatop_outputs(dir_name: str, energies: list[float] = [0.0, 0.65, 1.1
 
     # Step 3: generate result.art_IND
     write_result_art_IND(atomic_contribs, filename=dir_path / "result.art_IND")
-
+    
+    band_energy_info = parse_band_structure_energy_info(
+        procar_path=Path(dir_name) / "PROCAR",
+        outcar_path=Path(dir_name) / "OUTCAR",
+        output_file=Path(dir_name) / "energy-band.dat",
+     
+    )
+    
+    dshg_json = process_and_write_dshg_data(
+        total_file=dir_path / "out_nonlin" / "arp_dshg_xyz.txt",
+        vb_file=dir_path / "out_nonlin" / "arp_dshg-vb_xyz.txt",
+        cb_file=dir_path / "out_nonlin" / "arp_dshg-cb_xyz.txt",
+        out_dir=dir_path / "out_nonlin"
+    )
 
 
     # Step 4: return full output model

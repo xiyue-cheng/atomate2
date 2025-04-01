@@ -56,79 +56,55 @@ $opc maxomega = 30  domega = 0.01167  scissor=0.00  ecutmin = 0.03  smear = 0.03
 
         return input_file
 
-    def determine_highest_component(self, result_re_file: Path) -> str:
+    @staticmethod
+    def determine_highest_component(result_re_file: Path) -> str:
         """
-        Determine the highest component for ARTATOP calculation from the first T-matrix block.
-
-        Parameters
-        ----------
-        result_re_file : Path
-            Path to the `result.re` file.
-
-        Returns
-        -------
-        str
-            Component with the highest value (e.g., "311").
+        Determine the highest component from any valid non-zero T-matrix in result.re.
+        Tries all "d at omega = ..." blocks (0 eV, 0.65 eV, 1.167 eV, etc).
         """
         if not result_re_file.exists():
-            raise FileNotFoundError(
-                f"`{result_re_file}` not found. Please provide a valid `result.re` file."
-            )
+            raise FileNotFoundError(f"{result_re_file} not found.")
 
-        # Define matrix-to-component mapping for a 3x6 matrix
         matrix_to_component = {
-            (1, 1): "111",
-            (1, 2): "122",
-            (1, 3): "133",
-            (1, 4): "123",
-            (1, 5): "113",
-            (1, 6): "112",
-            (2, 1): "211",
-            (2, 2): "222",
-            (2, 3): "233",
-            (2, 4): "223",
-            (2, 5): "213",
-            (2, 6): "212",
-            (3, 1): "311",
-            (3, 2): "322",
-            (3, 3): "333",
-            (3, 4): "323",
-            (3, 5): "313",
-            (3, 6): "312",
+            (1, 1): "111", (1, 2): "122", (1, 3): "144", (1, 4): "124", (1, 5): "114", (1, 6): "112",
+            (2, 1): "211", (2, 2): "222", (2, 3): "244", (2, 4): "223", (2, 5): "214", (2, 6): "212",
+            (3, 1): "411", (3, 2): "422", (3, 3): "444", (3, 4): "424", (3, 5): "414", (3, 6): "412",
         }
-
-        max_value = float("-inf")
-        max_position = None
 
         with open(result_re_file) as f:
             lines = f.readlines()
 
-        # Locate the first T-matrix block starting with "d at omege = 0 eV"
-        matrix_start = None
+        max_value = None
+        max_position = None
+
         for idx, line in enumerate(lines):
-            if line.startswith("d at omege = 0 eV"):
-                matrix_start = (
-                    idx + 1
-                )  # The next line should be the start of the matrix
-                break
+            if line.strip().lower().startswith("d at omega"):
+                try:
+                    matrix = []
+                    for i in range(1, 4):
+                        row_line = lines[idx + i].strip()
+                        row = [float(x) for x in row_line.split()]
+                        if len(row) != 6:
+                            raise ValueError(f"Expected 6 values, got {len(row)}")
+                        matrix.append(row)
 
-        if matrix_start is None:
-            raise ValueError(
-                "T-matrix for `d at omege = 0 eV` not found in `result.re`."
-            )
+                    if all(all(val == 0.0 for val in row) for row in matrix):
+                        continue
 
-        # Parse the 3x6 matrix following the header
-        for row_idx in range(3):  # Expecting 3 rows
-            values = list(map(float, lines[matrix_start + row_idx].split()))
-            for col_idx, value in enumerate(values):
-                if value > max_value:
-                    max_value = value
-                    max_position = (row_idx + 1, col_idx + 1)
+                    for row_idx, row in enumerate(matrix):
+                        for col_idx, value in enumerate(row):
+                            if max_value is None or abs(value) > abs(max_value):
+                                max_value = value
+                                max_position = (row_idx + 1, col_idx + 1)
 
-        if max_position in matrix_to_component:
+                except Exception as e:
+                    print(f"Skipping block at line {idx} due to error: {e}")
+                    continue
+
+        if max_position and max_position in matrix_to_component:
             return matrix_to_component[max_position]
-        raise ValueError("Invalid T-matrix format or unexpected data in `result.re`.")
-        
+
+        raise ValueError("No valid non-zero T-matrix block found in result.re.")
 
     def find_best_component_from_nonlin(self, nonlin_dir: Path) -> str:
         """
