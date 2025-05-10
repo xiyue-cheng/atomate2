@@ -20,8 +20,10 @@ from typing import TYPE_CHECKING, Any
 from jobflow import Maker, Response, job, Flow
 from atomate2.artatop.sets.core import InputFileHandler
 from atomate2.common.files import copy_files
-
+from pymatgen.io.vasp import Vasprun
+from monty.os.path import zpath
 from atomate2.utils.path import strip_hostname
+
 from atomate2.vasp.jobs.base import BaseVaspMaker
 from atomate2.vasp.sets.core import NonSCFSetGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
@@ -34,13 +36,35 @@ if TYPE_CHECKING:
     from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
 
-from pathlib import Path  # Ensure Path is imported
+from pathlib import Path  
 
 @job
 def get_artatop_jobs(
-    optics_job_output,  # This should be the output of the optics_flow (e.g., TaskDoc)
+    optics_job_output,
+    hse_job_output, 
+    job_paths: dict | None = None,
     artatop_maker: ARTATOPMaker | None = None,
+    additional_metadata: dict | None = None,
 ) -> Response:
+
+    # Both static calculations are done now, so files exist
+    
+    pbe_path = strip_hostname(optics_job_output.dir_name)
+    hse_path = strip_hostname(hse_job_output.dir_name)
+
+    pbe_file = zpath(os.path.join(pbe_path, "vasprun.xml"))
+    hse_file = zpath(os.path.join(hse_path, "vasprun.xml"))
+
+    pbe_vasprun = Vasprun(pbe_file, parse_dos=False)
+    hse_vasprun = Vasprun(hse_file, parse_dos=False)
+
+    gap_pbe = pbe_vasprun.eigenvalue_band_properties[0]
+    gap_hse = hse_vasprun.eigenvalue_band_properties[0]
+    scissor = round(gap_hse - gap_pbe, 3)
+    
+    
+
+
     """
     Create a list of ARTATOP jobs (LIN, NLIN, ART) dynamically.
 
@@ -65,6 +89,16 @@ def get_artatop_jobs(
     #print(os.listdir(optics_job_output.dir_name))
 
     artatop_maker = artatop_maker or ARTATOPMaker()
+    artatop_maker.scissor = scissor
+    
+    # Add vasprun paths to be passed later to from_directory()
+    artatop_maker.task_document_kwargs.update({
+        "pbe_vasprun_file": str(pbe_file),
+        "hse_vasprun_file": str(hse_file),
+        "job_paths": job_paths,
+    })
+    
+    artatop_maker.task_document_kwargs["additional_metadata"] = additional_metadata
 
 
     # Run ARTATOP in the new directory

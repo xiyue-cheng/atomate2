@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 import os
+import subprocess
+
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -18,11 +20,9 @@ from atomate2.artatop.files import (
     copy_artatop_files,
     validate_required_files,
 )
-
-from atomate2.artatop.utils import run_artatop_shell_scripts
 from atomate2.artatop.run import run_artatop
 from atomate2.artatop.schemas import ArtatopTaskDocument
-
+from atomate2.artatop.artatop_parser import parse_artatop_outputs
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ _FILES_TO_ZIP = [*ARTATOP_OUTPUT_FILES, *VASP_OUTPUT_FILES]
 @dataclass
 class ARTATOPMaker(Maker):
     """
-    ARTATOP job makeomeger.
+    ARTATOP job maker.
 
     The maker copies DFT output files necessary for the ARTATOP run. It generates
     ARTATOP input files using `InputFileHandler`, runs ARTATOP, compresses outputs,
@@ -121,12 +121,13 @@ class ARTATOPMaker(Maker):
         # Step 3: Nonlinear
         nlin_input = input_handler.get_input_set("nlin", calc_dir=run_dir)
         run_artatop_step("nlin", nlin_input)
-        
-        #run_artatop_shell_scripts(run_dir)
 
-        # Step 4: Parse outputs and write result.re
-        from atomate2.artatop.artatop_parser import parse_lin_nlin_outputs, write_result_re, parse_artatop_outputs
-        output_model = parse_lin_nlin_outputs(run_dir)
+        # Step 4: Determine ART component from nonlinear output
+        # Step 4: Determine ART component (result.re or nonlin files)
+        #component = input_handler.get_best_component(run_dir)
+        
+        from atomate2.artatop.artatop_parser import parse_full_optical_response, write_result_re
+        output_model = parse_full_optical_response(run_dir)
         write_result_re(output_model, filename=run_dir / "result.re")
 
         # Step 4: Determine ART component (result.re or nonlin files)
@@ -137,10 +138,34 @@ class ARTATOPMaker(Maker):
         run_artatop_step("art", art_input)
         
         self.task_document_kwargs["input_file"] = str(art_input)
+       
+
+        # Step 6: Copy and run read_art-vasp.txt from utils
+        from shutil import copyfile
+        read_art_script = Path(__file__).parent / "scripts" / "read_art-vasp.txt"
+        target_script = run_dir / "read_art-vasp.txt"
+        if not target_script.exists():
+            copyfile(read_art_script, target_script)
+            print("read_art-vasp.txt copied to run_dir.")
+            
+        print("Running read_art-vasp.txt...")
+        subprocess.run(["bash", "read_art-vasp.txt"], cwd=run_dir, text=True, check=True)
+        print("Shell script finished.")
         
-        output_model = parse_artatop_outputs(run_dir)
+        # Copy read_procar.txt
+        read_procar_script = Path(__file__).parent / "scripts" / "read_procar.txt"
+        target_procar_script = run_dir / "read_procar.txt"
+        if not target_procar_script.exists():
+            copyfile(read_procar_script, target_procar_script)
         
-                # Step 3: List current directory and files before parsing
+        print("Running read_procar.txt...")
+        subprocess.run(["bash", "read_procar.txt"], cwd=run_dir, check=True)
+        print("read_procar.txt completed.")
+
+
+
+        
+        # Step 3: List current directory and files before parsing
         print("Files in run_dir before parsing:")
         for f in run_dir.iterdir():
             print("  ", f.name)
@@ -158,7 +183,9 @@ class ARTATOPMaker(Maker):
             print("Parsing complete.")
         except Exception as e:
             print("FAILED during from_directory:", e)
-            raise e
+            raise
+        # After running ArtatopTaskDocument.from_directory(...)
+        doc = ArtatopTaskDocument.from_directory(dir_name=str(Path.cwd()), **self.task_document_kwargs)
 
         # Save readable output
         from monty.serialization import dumpfn

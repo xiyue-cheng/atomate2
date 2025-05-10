@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import shutil
+from shutil import copyfile
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -17,16 +19,19 @@ from atomate2.artatop.sets.core import InputFileHandler
 from atomate2.artatop.files import (
     ARTATOP_OUTPUT_FILES,
     VASP_OUTPUT_FILES,
+    ARTATOP_INPUT_FILES,
     copy_artatop_files,
     validate_required_files,
 )
+from atomate2.artatop.files import ARTATOP_OUTPUT_FOLDERS 
+
 from atomate2.artatop.run import run_artatop
 from atomate2.artatop.schemas import ArtatopTaskDocument
 from atomate2.artatop.artatop_parser import parse_artatop_outputs
 
 logger = logging.getLogger(__name__)
 
-_FILES_TO_ZIP = [*ARTATOP_OUTPUT_FILES, *VASP_OUTPUT_FILES]
+_FILES_TO_ZIP = [*ARTATOP_OUTPUT_FILES, *VASP_OUTPUT_FILES, *ARTATOP_INPUT_FILES]
 
 
 @dataclass
@@ -45,7 +50,22 @@ class ARTATOPMaker(Maker):
     task_document_kwargs : dict
         Keyword arguments passed to :obj:`.ArtatopTaskDocument.from_directory`.
     run_artatop_kwargs : dict
-        Keyword arguments passed to :obj:`.run_artatop`.
+        Keyword arguments passed to :obj:`.run_artatop`.doc = ArtatopTaskDocument.from_directory(dir_name=str(Path.cwd()), **self.task_document_kwargs)
+            
+        for folder in ARTATOP_OUTPUT_FOLDERS:
+            folder_path = Path.cwd() / folder
+            if folder_path.exists():
+                shutil.make_archive(str(folder_path), "gztar", root_dir=folder_path)
+                shutil.rmtree(folder_path)
+        
+        # gzip folder
+        gzip_output_folder(
+            directory=Path.cwd(),
+            setting=SETTINGS.ARTATOP_ZIP_FILES,
+            files_list=_FILES_TO_ZIP,
+        )
+        logger.info("Compressing ARTATOP output files complete")
+        return doc
     calc_type : str
         Calculation type ("lin", "nlin", "art").
     custom_components : str
@@ -70,21 +90,16 @@ class ARTATOPMaker(Maker):
         ----------
         wavefunction_dir : str or Path
             A directory containing a WAVEFUNCTION and other outputs needed for Lobster
-        -------
+        -------2025-04-15 10:05:31,189 WARNING Response.stored_data is not supported with local manager.
+
         ArtatopTaskDocument
             Parsed results from ARTATOP calculations.
         """
         run_dir = Path.cwd()
         wavefunction_dir = Path(wavefunction_dir)
-        # Copy required files # VASP for example
+        # Copy required files          
         input_handler = InputFileHandler()
         copy_artatop_files(wavefunction_dir, dest_dir=run_dir)
-        
-        # Validate required VASP output files in wavefunction_dir
-        #validate_required_files(VASP_OUTPUT_FILES, Path(wavefunction_dir))
-        #logger.info(f"All required files found in 'wavefunction_dir': {wavefunction_dir}")
-        
-        # Create input files for ARTATOP
         
         
         def run_artatop_step(calc_type: str, input_file: Path):
@@ -96,101 +111,55 @@ class ARTATOPMaker(Maker):
             from custodian.artatop.handlers import ArtatopFilesValidator
 
             self.run_artatop_kwargs["validators"] = [ArtatopFilesValidator(required_files=[output_file])]
-           
-            
-
-
             self.run_artatop_kwargs["artatop_job_kwargs"] = {
                 "output_file": output_file,
                 "stderr_file": stderr_file,
                 "artatop_cmd": artatop_cmd,
                 "gzipped": False
             }
-            
-            
-
             run_artatop(**self.run_artatop_kwargs)
 
             if not Path(output_file).exists():
                 raise RuntimeError(f"ARTATOP failed: {output_file} not found.")
               
         # Step 2: Linear
-        lin_input = input_handler.get_input_set("lin", calc_dir=run_dir)
+        lin_input = input_handler.get_input_set("lin", calc_dir=run_dir, scissor=self.scissor)
         run_artatop_step("lin", lin_input)
 
         # Step 3: Nonlinear
-        nlin_input = input_handler.get_input_set("nlin", calc_dir=run_dir)
+        nlin_input = input_handler.get_input_set("nlin", calc_dir=run_dir, scissor=self.scissor)
         run_artatop_step("nlin", nlin_input)
+        
+        from atomate2.artatop.artatop_parser import parse_full_optical_response, write_result_re
+        output_model = parse_full_optical_response(run_dir)
+        write_result_re(output_model, filename=run_dir / "result.re")
 
-        # Step 4: Determine ART component from nonlinear output
         # Step 4: Determine ART component (result.re or nonlin files)
-        component = input_handler.get_best_component(run_dir)
+        component = input_handler.determine_highest_component(run_dir / "result.re")
 
         # Step 5: ART
-        art_input = input_handler.get_input_set("art", calc_dir=run_dir, component=component)
+        art_input = input_handler.get_input_set("art", calc_dir=run_dir, component=component, scissor=self.scissor)
         run_artatop_step("art", art_input)
         
         self.task_document_kwargs["input_file"] = str(art_input)
-       
-
-        # Step 6: Copy and run read_art-vasp.txt from utils
-        from shutil import copyfile
-        read_art_script = Path(__file__).parent / "scripts" / "read_art-vasp.txt"
-        target_script = run_dir / "read_art-vasp.txt"
-        if not target_script.exists():
-            copyfile(read_art_script, target_script)
-            print("read_art-vasp.txt copied to run_dir.")
-            
-        print("Running read_art-vasp.txt...")
-        subprocess.run(["bash", "read_art-vasp.txt"], cwd=run_dir, text=True, check=True)
-        print("Shell script finished.")
-        
-        # Copy read_procar.txt
-        read_procar_script = Path(__file__).parent / "scripts" / "read_procar.txt"
-        target_procar_script = run_dir / "read_procar.txt"
-        if not target_procar_script.exists():
-            copyfile(read_procar_script, target_procar_script)
-        
-        print("Running read_procar.txt...")
-        subprocess.run(["bash", "read_procar.txt"], cwd=run_dir, check=True)
-        print("read_procar.txt completed.")
-
-
-
-        
-        # Step 3: List current directory and files before parsing
-        print("Files in run_dir before parsing:")
-        for f in run_dir.iterdir():
-            print("  ", f.name)
             
         # Parse outputs
         logger.info("Parsing ARTATOP outputs")
 
-        # Step 4: Parse outputs
-        print("Parsing ARTATOP outputs now...")
-        
-        print("Running ArtatopTaskDocument.from_directory...")
-        try:
-            doc = ArtatopTaskDocument.from_directory(dir_name=str(Path.cwd()), **self.task_document_kwargs
-            )
-            print("Parsing complete.")
-        except Exception as e:
-            print("FAILED during from_directory:", e)
-            raise
         # After running ArtatopTaskDocument.from_directory(...)
         doc = ArtatopTaskDocument.from_directory(dir_name=str(Path.cwd()), **self.task_document_kwargs)
-
-        # Save readable output
-        from monty.serialization import dumpfn
+            
+        for folder in ARTATOP_OUTPUT_FOLDERS:
+            folder_path = Path.cwd() / folder
+            if folder_path.exists():
+                shutil.make_archive(str(folder_path), "gztar", root_dir=folder_path)
+                shutil.rmtree(folder_path)
         
-        print("Saving artatop_result.json now...")
-        output_path = Path.cwd() / "artatop_result.json"
-        dumpfn(doc.dict(), output_path, indent=4)
-        print("Saved successfully.")
-
-        
-        
-         # Compress output files
-        logger.info("Compressing ARTATOP output files")
-        
+        # gzip folder
+        gzip_output_folder(
+            directory=Path.cwd(),
+            setting=SETTINGS.ARTATOP_ZIP_FILES,
+            files_list=_FILES_TO_ZIP,
+        )
+        logger.info("Compressing ARTATOP output files complete")
         return doc

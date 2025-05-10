@@ -452,54 +452,5 @@ def process_and_write_dshg_data(
             ))
 
     return summary
-def parse_artatop_outputs(dir_name: str, energies: list[float] = [0.0, 0.65, 1.167]) -> ArtatopOutputModel:
-    dir_path = Path(dir_name)
-
-    # Step 1: parse linear + nonlinear outputs
-    lin = parse_linear_response_at_energies(dir_path / "out_lin", energies)
-    nlin = parse_nonlinear_response_at_energies(dir_path / "out_nonlin", energies)
-
-    # Step 2: atomic orbital contributions
-    structure = Structure.from_file(dir_path / "POSCAR")
-    out_dir = dir_path / "out_nonlin"
-    atomic_contribs = parse_orbital_atomic_contributions(structure, out_dir)
-
-    # Step 3: generate result.art_IND
-    write_result_art_IND(atomic_contribs, filename=dir_path / "result.art_IND")
-    
-    band_energy_info = parse_band_structure_energy_info(
-        procar_path=Path(dir_name) / "PROCAR",
-        outcar_path=Path(dir_name) / "OUTCAR",
-        output_file=Path(dir_name) / "energy-band.dat",
-     
-    )
-    
-    dshg_json = process_and_write_dshg_data(
-        total_file=dir_path / "out_nonlin" / "arp_dshg_xyz.txt",
-        vb_file=dir_path / "out_nonlin" / "arp_dshg-vb_xyz.txt",
-        cb_file=dir_path / "out_nonlin" / "arp_dshg-cb_xyz.txt",
-        out_dir=dir_path / "out_nonlin"
-    )
-
-
-    # Step 4: return full output model
-    return ArtatopOutputModel(
-        dir_name=str(dir_path),
-        linear_response=lin["base"]["linear"],
-        nonlinear_response=nlin["base"]["nonlinear"],
-        d_tensor=nlin["base"]["d_tensor"],
-        deff_values=nlin["base"]["deff"],
-        birefringence=lin["base"]["birefringence"],
-
-        linear_response_up=lin["up"]["linear"] if lin["up"] else None,
-        d_tensor_up=nlin["up"]["d_tensor"] if nlin["up"] else None,
-        deff_values_up=nlin["up"]["deff"] if nlin["up"] else None,
-        birefringence_up=lin["up"]["birefringence"] if lin["up"] else None,
-
-        linear_response_down=lin["down"]["linear"] if lin["down"] else None,
-        d_tensor_down=nlin["down"]["d_tensor"] if nlin["down"] else None,
-        deff_values_down=nlin["down"]["deff"] if nlin["down"] else None,
-        birefringence_down=lin["down"]["birefringence"] if lin["down"] else None,
-
-        atomic_contributions=atomic_contribs
-    )
+def parse_artatop_outputs(dir_name: str) -> ArtatopOutputModel:
+    return parse_full_optical_response(dir_name)

@@ -12,7 +12,21 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
-ARTATOP_OUTPUT_FILES = ["re_lin", "re_nlin", "re_art"]
+ARTATOP_OUTPUT_FILES = [
+    "re_lin", 
+    "re_nlin", 
+    "re_art", 
+    "result.art_IND", 
+    "result.art_TOT", 
+    "result.re", 
+    "energy-band.dat"
+]
+
+ARTATOP_INPUT_FILES = [
+    "input_lin",
+    "input_nlin",
+    "input_art",
+]
 
 VASP_OUTPUT_FILES = [
     "INCAR",
@@ -24,6 +38,20 @@ VASP_OUTPUT_FILES = [
     "CONTCAR",
     "OPTIC",
     "WAVEDER",
+    "CHG",
+    "CHGCAR",
+    "KPOINTS",
+    "DOSCAR",
+    "EIGENVAL",
+    "IBZKPT",
+    "OSZICAR",
+    "WAVECAR",
+    "XDATCAR",
+]
+
+ARTATOP_OUTPUT_FOLDERS = [
+    "out_lin",
+    "out_nonlin"
 ]
 
 logger = logging.getLogger(__name__)
