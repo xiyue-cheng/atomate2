@@ -100,7 +100,7 @@ class ARTATOPMaker(Maker):
         wavefunction_dir = Path(wavefunction_dir)
         # Copy required files          
         input_handler = InputFileHandler()
-        copy_artatop_files(wavefunction_dir, dest_dir=run_dir)
+        copy_artatop_files(wavefunction_dir, dest_dir=run_dir, force= True)
         
         
         def run_artatop_step(calc_type: str, input_file: Path):
