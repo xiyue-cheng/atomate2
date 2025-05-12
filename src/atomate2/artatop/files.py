@@ -63,6 +63,7 @@ def copy_artatop_files(
     dest_dir: Path | str,
     src_host: str | None = None,
     file_client: FileClient = None,
+    force: bool = False
 ) -> None:
     """
     Copy ARTATOP files from the source directory to the destination directory.
@@ -106,6 +107,7 @@ def copy_artatop_files(
         allow_missing=True,
         file_client=file_client,
         force=True
+        force=force
     )
 
     logger.info("Finished copying inputs")
