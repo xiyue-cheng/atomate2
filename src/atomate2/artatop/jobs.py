@@ -77,6 +77,7 @@ class ARTATOPMaker(Maker):
     run_artatop_kwargs: dict = field(default_factory=dict)
     calc_type: str = "lin"
     custom_components: str | None = None
+    scissor: float = 0.0
 
     @job(output_schema=ArtatopTaskDocument)
     def make(
