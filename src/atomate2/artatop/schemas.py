@@ -263,6 +263,11 @@ class ArtatopOutputModel(BaseModel):
             hse_vasprun_file=hse_vasprun_file,
             additional_metadata=additional_metadata,
         )
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            Structure: lambda v: v.as_dict()
+        }
 
 
 class ArtatopTaskDocument(StructureMetadata, extra="allow"):
@@ -353,6 +358,12 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
             builder_meta=builder_meta,
             additional_metadata=additional_metadata,
         )
+        
+    class Config:
+        arbitrary_types_allowed = True
+        json_encoders = {
+            Structure: lambda v: v.as_dict()
+        }
         
 def read_saved_json(
     filename: str, pymatgen_objs: bool = True, query: str = "structure"

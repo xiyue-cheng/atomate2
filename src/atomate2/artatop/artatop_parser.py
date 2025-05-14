@@ -676,11 +676,21 @@ def parse_artatop_outputs(
     output_model.scissor_exp = functional_data["scissor_exp"]
     output_model.scissor_hse = functional_data["scissor_hse"]
     
-    output_model.kpoints_relax1 = list(kpoints_relax1) if kpoints_relax1 else None
-    output_model.kpoints_relax2 = list(kpoints_relax2) if kpoints_relax2 else None
-    output_model.kpoints_static = list(kpoints_static) if kpoints_static else None
-    output_model.kpoints_optics = list(kpoints_optics) if kpoints_optics else None
-    output_model.kpoints_hse06 = list(kpoints_hse06) if kpoints_hse06 else None
+    def clean_kpoints(k):
+        if not k:
+            return None
+        if isinstance(k[0], list):  # case like [[5,5,5]]
+            return k[0]
+        if isinstance(k, list) and len(k) == 3:  # case like [5,5,5]
+            return k
+        return None  # fallback
+
+    # Assign cleaned kpoints to the model
+    output_model.kpoints_relax1 = clean_kpoints(kpoints_relax1)
+    output_model.kpoints_relax2 = clean_kpoints(kpoints_relax2)
+    output_model.kpoints_static = clean_kpoints(kpoints_static)
+    output_model.kpoints_optics = clean_kpoints(kpoints_optics)
+    output_model.kpoints_hse06 = clean_kpoints(kpoints_hse06)
     output_model.nbands_static = nbands_static
     output_model.nbands_optics = nbands_optics
     output_model.total_energy_static = total_energy_static
@@ -693,6 +703,14 @@ def parse_artatop_outputs(
      
     write_artatop_summary(output_model, cif_filename=cif_name)
     write_artatop_summary_result_line(output_model, cif_filename=cif_name)
+    
+    d_tensor_0 = next((x for x in output_model.d_tensor_uv if abs(x.energy - 0.0) < 1e-3), None)
+    if d_tensor_0:
+        top_label = max(d_tensor_0.components, key=lambda k: abs(d_tensor_0.components[k]))
+        top_value = abs(d_tensor_0.components[top_label])
+        output_model.art_top_component = top_label
+        output_model.art_top_value = top_value
+           
     write_artatop_analysis_file(output_model, cif_filename=cif_name, filename_dir=dir_name)
 
     # Write simplified OPTICS from result.re
@@ -700,13 +718,4 @@ def parse_artatop_outputs(
     if result_re_path.exists():
         parse_fixed_lines(result_re_path, cif_name)
         
-    # Extract top SHG tensor component from 0 eV block
-    d_tensor_0 = next((x for x in output_model.d_tensor_uv if abs(x.energy - 0.0) < 1e-3), None)
-    if d_tensor_0:
-        top_label = max(d_tensor_0.components, key=lambda k: abs(d_tensor_0.components[k]))
-        top_value = d_tensor_0.components[top_label]
-        output_model.art_top_component = top_label
-        output_model.art_top_value = top_value
-
-
     return output_model

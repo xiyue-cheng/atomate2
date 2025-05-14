@@ -31,13 +31,13 @@ class InputFileHandler:
         if calc_type == "lin":
             content = """LO 77
 $dft_src lvasp=T $end
-$opc maxomega = 30  domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  smear = 0.03 $end
+$opc maxomega = 15 domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  smear = 0.03 $end
 """.format(scissor=scissor)
             (calc_dir/ "out_lin").mkdir(exist_ok=True)
         elif calc_type == "nlin":
             content = """NO 777
 $dft_src lvasp=T $end
-$opc maxomega = 30  domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  smear = 0.03 $end
+$opc maxomega = 1.167  domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  smear = 0.03 $end
 """.format(scissor=scissor)
             (calc_dir/ "out_nonlin").mkdir(exist_ok=True)
         elif calc_type == "art":
@@ -45,7 +45,7 @@ $opc maxomega = 30  domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  sme
                 raise ValueError("Component is required for ART calculations.")
             content = f"""AR {component}
 $dft_src lvasp=T $end
-$opc maxomega = 30  domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  smear = 0.03 $end
+$opc maxomega = 0  domega = 0.01167  scissor={scissor:.3f}  ecutmin = 0.03  smear = 0.03 $end
 """.format(scissor=scissor)
         else:
             raise ValueError(f"Unsupported calculation type: {calc_type}")

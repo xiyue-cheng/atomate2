@@ -18,7 +18,8 @@ from atomate2.common.files import copy_files
 
 from pymatgen.io.vasp import Poscar, Vasprun, Kpoints
 from atomate2.vasp.flows.core import DoubleRelaxMaker, OpticsMaker
-from atomate2.vasp.jobs.core import HSEStaticMaker 
+from atomate2.vasp.sets.core import RelaxSetGenerator, HSEStaticSetGenerator
+from atomate2.vasp.jobs.core import RelaxMaker, HSEStaticMaker 
 from atomate2.artatop.job.artatop import get_artatop_jobs
 from atomate2.vasp.sets.core import NonSCFSetGenerator
 from atomate2.artatop.job.artatop import ARTATOPMaker
@@ -37,17 +38,27 @@ class ArtatopWorkflowMaker(Maker):
     relax_maker: Maker = DoubleRelaxMaker()
     optics_maker: Maker = OpticsMaker()
     hse06_maker: Maker = HSEStaticMaker()
+    
 
     def make(self, structure: Structure, prev_dir: str | Path, additional_metadata: Optional[dict] = None) -> Flow:
-        self.optics_maker.static_maker.input_set_generator.user_incar_settings = {"LORBIT": 10}
+    
+        relax_generator = RelaxSetGenerator(user_incar_settings={"NPAR": 4, "ENAUG": None, "GGA": None, "MAGMOM": None, "SIGMA": None})
+        relax1 = RelaxMaker(input_set_generator=relax_generator)
+        relax2 = RelaxMaker(input_set_generator=relax_generator)
+        relax_maker = DoubleRelaxMaker(relax_maker1=relax1, relax_maker2=relax2)
+
+        self.optics_maker.static_maker.input_set_generator.user_incar_settings = {"LORBIT": 10, "NPAR": 4, "ENAUG":None, "GGA":None, "MAGMOM": None, "SIGMA": None}
         self.optics_maker.band_structure_maker.input_set_generator = NonSCFSetGenerator(
             optics=True,
             nbands_factor=4.0,
-            user_incar_settings={"LORBIT": 10, "CSHIFT": 0.1},
+            user_incar_settings={"LORBIT": 10, "CSHIFT": 0.1, "NPAR":4, "ENAUG": None, "GGA": None, "MAGMOM": None, "SIGMA": None},
         )
+        
+        hse_generator = HSEStaticSetGenerator(user_incar_settings={"NPAR": 4, "ENAUG": None, "GGA": None, "MAGMOM": None, "SIGMA": None})
+        hse_maker = HSEStaticMaker(input_set_generator=hse_generator)
 
         # Relaxation flow
-        relax_flow = self.relax_maker.make(structure=structure)
+        relax_flow = relax_maker.make(structure=structure)
         relax1_job = relax_flow.jobs[0]
         relax2_job = relax_flow.jobs[1]
         relax_dir = relax_flow.output.dir_name
@@ -65,7 +76,7 @@ class ArtatopWorkflowMaker(Maker):
 
         # HSE flow
         static_dir = optics_job.output.dir_name
-        hse06_job = self.hse06_maker.make(
+        hse06_job = hse_maker.make(
             structure=static_job.output.structure,
             prev_dir=static_dir,
         )

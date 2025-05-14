@@ -318,7 +318,7 @@ def write_artatop_analysis_file(output_model, cif_filename: str, filename_dir: s
 
     # Get top tensor component and value (assume d33 is largest if not set)
     top_label = output_model.art_top_component or "d33"
-    top_value = output_model.art_top_value or 0.0
+    top_value = output_model.art_top_value if output_model.art_top_value is not None else 0.0
 
     # Write file
     with open(filename, "w") as f:

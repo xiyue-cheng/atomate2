@@ -106,8 +106,7 @@ def copy_artatop_files(
         include_files=files,
         allow_missing=True,
         file_client=file_client,
-        force=True
-        force=force
+        force=force,
     )
 
     logger.info("Finished copying inputs")
