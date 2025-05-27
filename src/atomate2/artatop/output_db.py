@@ -315,15 +315,24 @@ def write_artatop_analysis_file(output_model, cif_filename: str, filename_dir: s
 
     # Get SHG summary entries
     summary_entries = output_model.shg_summary or []
+    
 
     # Get top tensor component and value (assume d33 is largest if not set)
     top_label = output_model.art_top_component or "d33"
     top_value = output_model.art_top_value if output_model.art_top_value is not None else 0.0
+    
+    # Mapping tensor components to Voigt labels
+    component_to_voigt = {
+        "d_xxx": "d_11", "d_xyy": "d_12", "d_xzz": "d_13", "d_xyz": "d_14", "d_xxz": "d_15", "d_xxy": "d_16",
+        "d_yxx": "d_21", "d_yyy": "d_22", "d_yzz": "d_23", "d_yyz": "d_24", "d_yxz": "d_25", "d_yxy": "d_26",
+        "d_zxx": "d_31", "d_zyy": "d_32", "d_zzz": "d_33", "d_zyz": "d_34", "d_zxz": "d_35", "d_zxy": "d_36"
+    }
+    voigt_label = component_to_voigt.get(top_label, top_label)
 
     # Write file
     with open(filename, "w") as f:
-        f.write(f"{cif_stem} {top_label} {abs(top_value):.3f}\n")
-        f.write(f"ART analysis results for the largest component {top_label} for optic_EgHSE\n")
+        f.write(f"{cif_stem} {voigt_label} {abs(top_value):.3f}\n")
+        f.write(f"ART analysis results for the largest component {voigt_label} for optic_EgHSE\n")
         f.write("Type    Natom   IND     TOT     VB      CB      VB_s    VB_p    VB_d    CB_s    CB_p    CB_d    TOT_s   TOT_p   TOT_d   Atao\n")
 
         for e in summary_entries:

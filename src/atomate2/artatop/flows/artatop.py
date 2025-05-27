@@ -42,19 +42,19 @@ class ArtatopWorkflowMaker(Maker):
 
     def make(self, structure: Structure, prev_dir: str | Path, additional_metadata: Optional[dict] = None) -> Flow:
     
-        relax_generator = RelaxSetGenerator(user_incar_settings={"NPAR": 1, "GGA": None})
+        relax_generator = RelaxSetGenerator(user_incar_settings={"NPAR": 4})
         relax1 = RelaxMaker(input_set_generator=relax_generator)
         relax2 = RelaxMaker(input_set_generator=relax_generator)
         relax_maker = DoubleRelaxMaker(relax_maker1=relax1, relax_maker2=relax2)
 
-        self.optics_maker.static_maker.input_set_generator.user_incar_settings = {"LORBIT": 10, "NPAR": 1, "GGA": None}
+        self.optics_maker.static_maker.input_set_generator.user_incar_settings = {"LORBIT": 10, "NPAR": 4}
         self.optics_maker.band_structure_maker.input_set_generator = NonSCFSetGenerator(
             optics=True,
             nbands_factor=4.0,
-            user_incar_settings={"LORBIT": 10, "CSHIFT": 0.1, "NPAR":1, "GGA": None},
+            user_incar_settings={"LORBIT": 10, "CSHIFT": 0.1, "NPAR": 4, "ALGO": "Normal", "LMIXTAU": None},
         )
         
-        hse_generator = HSEStaticSetGenerator(user_incar_settings={"NPAR": 1, "GGA": None})
+        hse_generator = HSEStaticSetGenerator(user_incar_settings={"NPAR": 4})
         hse_maker = HSEStaticMaker(input_set_generator=hse_generator)
 
         # Relaxation flow
