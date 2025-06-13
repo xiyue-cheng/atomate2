@@ -599,7 +599,9 @@ def parse_artatop_outputs(
         ori_alpha = lat.alpha
         ori_beta = lat.beta
         ori_gamma = lat.gamma
-        original_structure = unrelaxed_structure.as_dict()
+        
+        from monty.serialization import jsanitize
+        original_structure = jsanitize(unrelaxed_structure.as_dict(), strict=True)
     
 
 
@@ -613,11 +615,22 @@ def parse_artatop_outputs(
 
 
         # KPOINTS
-        kpoints_relax1 = Kpoints.from_file(relax1_dir / "KPOINTS.gz").kpts
-        kpoints_relax2 = Kpoints.from_file(relax2_dir / "KPOINTS.gz").kpts
-        kpoints_static = Kpoints.from_file(static_dir / "KPOINTS.gz").kpts
-        kpoints_optics = Kpoints.from_file(optics_dir / "KPOINTS.gz").kpts
-        kpoints_hse06 = Kpoints.from_file(hse06_dir / "KPOINTS.gz").kpts
+        def load_kpoints_from_vasprun(vasprun_path: Path):
+            if not vasprun_path.exists():
+                print(f"WARNING: vasprun file not found: {vasprun_path}")
+                return None
+            try:
+                vr = Vasprun(str(vasprun_path), parse_dos=False)
+                return vr.kpoints.kpts[0]  # [[3, 3, 3]] → [3, 3, 3]
+            except Exception as e:
+                print(f"WARNING: Failed to parse kpoints from vasprun: {e}")
+                return None
+                
+        kpoints_relax1 = load_kpoints_from_vasprun(relax1_dir / "vasprun.xml.gz")
+        kpoints_relax2 = load_kpoints_from_vasprun(relax2_dir / "vasprun.xml.gz")
+        kpoints_static = load_kpoints_from_vasprun(static_dir / "vasprun.xml.gz")
+        kpoints_optics = load_kpoints_from_vasprun(optics_dir / "vasprun.xml.gz")
+        kpoints_hse06 = load_kpoints_from_vasprun(hse06_dir / "vasprun.xml.gz")
 
         # NBANDS and energy
         nbands_static = Vasprun(static_dir / "vasprun.xml.gz").parameters.get("NBANDS")
@@ -630,7 +643,7 @@ def parse_artatop_outputs(
         print(f"WARNING: Failed to extract summary fields: {e}")
         ori_a = ori_b = ori_c = ori_alpha = ori_beta = ori_gamma = None
         original_structure = None
-        kpoints_relax1 = kpoints_static = kpoints_optics = None
+        kpoints_relax1 = kpoints_relax2 = kpoints_static = kpoints_optics = kpoints_hse06 = None
         nbands_static = nbands_optics = total_energy_static = None
         ediffg_relax2 = None
         aexx_hse = None

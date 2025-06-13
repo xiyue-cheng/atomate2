@@ -52,8 +52,8 @@ def get_artatop_jobs(
     pbe_path = strip_hostname(optics_job_output.dir_name)
     hse_path = strip_hostname(hse_job_output.dir_name)
 
-    pbe_file = zpath(os.path.join(pbe_path, "vasprun.xml"))
-    hse_file = zpath(os.path.join(hse_path, "vasprun.xml"))
+    pbe_file = zpath(os.path.join(pbe_path, "vasprun.xml.gz"))
+    hse_file = zpath(os.path.join(hse_path, "vasprun.xml.gz"))
 
     pbe_vasprun = Vasprun(pbe_file, parse_dos=False)
     hse_vasprun = Vasprun(hse_file, parse_dos=False)
