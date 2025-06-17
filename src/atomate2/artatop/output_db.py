@@ -133,9 +133,9 @@ def write_artatop_summary(output_model, cif_filename: str, filename_dir: str = "
         f.write(f"ori a (A)                      {ori.ori_a or 0.0:.3f}\n")
         f.write(f"ori b (A)                      {ori.ori_b or 0.0:.3f}\n")
         f.write(f"ori c (A)                      {ori.ori_c or 0.0:.3f}\n")
-        f.write(f"ori alpha (degree)             {ori.ori_alpha:.3f}\n")
-        f.write(f"ori beta (degree)              {ori.ori_beta:.3f}\n")
-        f.write(f"ori gama (degree)              {ori.ori_gamma:.3f}\n")
+        f.write(f"ori alpha (degree)             {ori.ori_alpha or 0.0:.3f}\n")
+        f.write(f"ori beta (degree)              {ori.ori_beta or 0.0:.3f}\n")
+        f.write(f"ori gama (degree)              {ori.ori_gamma or 0.0:.3f}\n")
 
         f.write(f"relax a (A)                    {output_model.relax_a or 0.0:.3f}\n")
         f.write(f"relax b (A)                    {output_model.relax_b or 0.0:.3f}\n")
@@ -217,9 +217,10 @@ def write_artatop_summary(output_model, cif_filename: str, filename_dir: str = "
         f.write("#Calculation parameters\n")
 
         k1 = output_model.kpoints_relax1 or [[1,1,1]]
+        k4 = output_model.kpoints_relax2 or [[1,1,1]]
         k2 = output_model.kpoints_static or [[1,1,1]]
         k3 = output_model.kpoints_optics or [[1,1,1]]
-        k4 = output_model.kpoints_relax2 or [[1,1,1]]
+        
 
         def kformat(klist):
             return f"{klist[0][0]} x {klist[0][1]} x {klist[0][2]}"
