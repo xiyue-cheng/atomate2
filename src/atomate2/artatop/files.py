@@ -40,7 +40,6 @@ VASP_OUTPUT_FILES = [
     "WAVEDER",
     "CHG",
     "CHGCAR",
-    "KPOINTS",
     "DOSCAR",
     "EIGENVAL",
     "IBZKPT",

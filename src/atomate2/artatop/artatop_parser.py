@@ -1,4 +1,5 @@
 import numpy as np
+import pathlib
 from pathlib import Path
 from typing import Union, List, Optional
 from pymatgen.core import Structure
@@ -247,11 +248,12 @@ def parse_orbital_atomic_contributions(structure: Structure, out_dir: Path) -> l
 
     return atomic_contribs
     
-from pathlib import Path;
+from pathlib import Path
 from atomate2.artatop.schemas import SHGSummaryEntry
 
 
-def write_result_art_IND(summary_entries: list[SHGSummaryEntry], filename: Path = Path("result.art_IND")):
+def write_result_art_IND(summary_entries: list[SHGSummaryEntry], filename: Union[str, Path] = "result.art_IND"):
+    filename = Path(filename)
     with open(filename, "w") as f:
         f.write("Type Natom IND TOT VB CB VB_s VB_p VB_d CB_s CB_p CB_d TOT_s TOT_p TOT_d\n")
         for e in summary_entries:
@@ -592,6 +594,8 @@ def parse_artatop_outputs(
         unrelaxed_poscar = Poscar.from_file(relax1_dir / "POSCAR.gz")
         unrelaxed_structure = unrelaxed_poscar.structure
         lat = unrelaxed_structure.lattice
+        
+        original_structure = unrelaxed_structure
 
         ori_a = lat.a
         ori_b = lat.b
@@ -599,12 +603,7 @@ def parse_artatop_outputs(
         ori_alpha = lat.alpha
         ori_beta = lat.beta
         ori_gamma = lat.gamma
-        
-        from monty.serialization import jsanitize
-        original_structure = jsanitize(unrelaxed_structure.as_dict(), strict=True)
-    
-
-
+       
         # Read EDIFFG from INCAR of Relax2
         ediffg_relax2 = Incar.from_file(relax2_dir / "INCAR.gz").get("EDIFFG", None)
 
@@ -613,18 +612,47 @@ def parse_artatop_outputs(
         vasprun = Vasprun(vasprun_path)
         aexx_hse = vasprun.parameters.get("AEXX", 0.25)
 
+        import gzip
+        import xml.etree.ElementTree as ET
+        def load_kpoints_from_vasprun(vasprun_path: pathlib.Path) -> Optional[list[int]]:
+            """
+            Extract the automatic k-point grid (divisions) from a vasprun.xml or .gz file.
 
-        # KPOINTS
-        def load_kpoints_from_vasprun(vasprun_path: Path):
+            Args:
+                vasprun_path (pathlib.Path): Path to vasprun.xml or vasprun.xml.gz
+
+             Returns:
+                Optional[list[int]]: K-point grid like [12, 12, 12], or None if not found.
+            """
             if not vasprun_path.exists():
                 print(f"WARNING: vasprun file not found: {vasprun_path}")
                 return None
+
             try:
-                vr = Vasprun(str(vasprun_path), parse_dos=False)
-                return vr.kpoints.kpts[0]  # [[3, 3, 3]] → [3, 3, 3]
-            except Exception as e:
-                print(f"WARNING: Failed to parse kpoints from vasprun: {e}")
+                # Load XML content
+                if vasprun_path.suffix == ".gz":
+                    with gzip.open(vasprun_path, 'rt') as f:
+                        tree = ET.parse(f)
+                else:
+                    tree = ET.parse(vasprun_path)
+
+                root = tree.getroot()
+                for gen in root.iter("generation"):
+                    if gen.attrib.get("param") in ("Gamma", "kpts"):
+                        for v in gen.findall("v"):
+                            if v.attrib.get("name") == "divisions":
+                                divisions = [int(x) for x in v.text.strip().split()]
+                                if len(divisions) >= 3:
+                                    return divisions[:3]
+                print(f"WARNING: No <generation> divisions found.")
                 return None
+
+            except Exception as e:
+                print(f"WARNING: Manual parsing of vasprun.xml failed: {e}")
+                return None
+
+
+
                 
         kpoints_relax1 = load_kpoints_from_vasprun(relax1_dir / "vasprun.xml.gz")
         kpoints_relax2 = load_kpoints_from_vasprun(relax2_dir / "vasprun.xml.gz")

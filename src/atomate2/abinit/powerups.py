@@ -159,7 +159,7 @@ def update_user_kpoints_settings(
     ----------
     flow : .Job or .Flow or .Maker
         A job, flow or Maker.
-    kpoints_updates : dict
+    _updates : dict
         The updates to apply. Can be specified as a dictionary or as a KSampling object.
         If a dictionary is supplied, existing keys in user_kpoints_settings will not be
         modified unless explicitly specified in ``kpoints_updates``.

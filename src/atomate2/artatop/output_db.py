@@ -222,8 +222,8 @@ def write_artatop_summary(output_model, cif_filename: str, filename_dir: str = "
         k3 = output_model.kpoints_optics or [[1,1,1]]
         
 
-        def kformat(klist):
-            return f"{klist[0][0]} x {klist[0][1]} x {klist[0][2]}"
+        def kformat(klist: list[int]) -> str:
+            return f"{klist[0]} x {klist[1]} x {klist[2]}"
 
         f.write(f"K-mesh for relax               {kformat(k1)}\n")
         f.write(f"K-mesh for static              {kformat(k2)}\n")
@@ -234,7 +234,7 @@ def write_artatop_summary(output_model, cif_filename: str, filename_dir: str = "
         f.write(f"AEXX use for HSE               {aexx_val:.4f}\n")
 
         #f.write(f"EDIFFG                         {output_model.ediffg_relax2:.3f if output_model.ediffg_relax2 else -0.002}\n")
-        ediffg_value = output_model.ediffg_relax2 if output_model.ediffg_relax2 is not None else -0.002
+        ediffg_value = output_model.ediffg_relax2 if output_model.ediffg_relax2 is not None else -0.000
         f.write(f"EDIFFG                         {ediffg_value:.3f}\n")
 
         # Flags
@@ -299,7 +299,8 @@ def write_artatop_summary_result_line(output_model, cif_filename: str, filename_
     # Write line
     with open(filename, "w") as f:
         f.write("System                   Natom   SG_relax       NCS/CS    enthalpy  Eg_PBE    Eg_type   Type    deff_0    deff_IR   deff_UV   dn_IR     dn_UV\n")
-
+        f.write("                                                          (eV/atom)  (eV)      (eV)              (pm/V)    (pm/V)    (pm/V)              \n")
+        
         f.write(f"{material_id:<24}{natoms:<8}{sg:<15}{point_type:<10}"
             f"{enthalpy:9.3f}{eg_pbe:9.2f}{eg_hse:10.2f}{'HSE':>8}"
             f"{deff_0:10.3f}{deff_ir:10.3f}{deff_uv:10.3f}{dn_ir:10.3f}{dn_uv:10.3f}\n")

@@ -209,7 +209,7 @@ class ArtatopOutputModel(BaseModel):
     ori_alpha: Optional[float] = None
     ori_beta: Optional[float] = None
     ori_gamma: Optional[float] = None
-    original_structure: Optional[dict] = None
+    original_structure: Optional[Structure] = None
     
     relax_a: Optional[float] = None
     relax_b: Optional[float] = None
