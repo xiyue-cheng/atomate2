@@ -92,6 +92,36 @@ class HSE_GENERATOR(HSEStaticSetGenerator):
 
         return VaspInput(incar=vis.incar, poscar=vis.poscar, potcar=vis.potcar, kpoints=None)
 
+class RELAX_GENERATOR(RelaxSetGenerator):
+    """
+    Minimal relax generator:
+    - Call parent to build inputs.
+    - Overwrite INCAR keys you pass (last wins).
+    - Remove keys set to None.
+    - Always rely on KSPACING (no KPOINTS file).
+    """
+    def __init__(self, user_incar_settings: Optional[Dict[str, Any]] = None, **kwargs):
+        self._raw_user_incar = dict(user_incar_settings or {})
+        super().__init__(user_incar_settings=user_incar_settings, **kwargs)
+
+    def get_input_set(self, structure, prev_dir: Optional[str] = None, **kwargs):
+        vis = super().get_input_set(structure, prev_dir=prev_dir, **kwargs)
+
+        # Overwrite with your settings
+        for k, v in self._raw_user_incar.items():
+            vis.incar[k] = v
+
+        # Drop None-valued tags
+        for k in [k for k, v in list(vis.incar.items()) if v is None]:
+            vis.incar.pop(k, None)
+
+        # Always drop KPOINTS → rely only on KSPACING
+        return VaspInput(
+            incar=vis.incar,
+            poscar=vis.poscar,
+            potcar=vis.potcar,
+            kpoints=None,
+        )
         
 # --- Custom Relax Maker ---
 class IonicRetryOnceHandler(ErrorHandler):
@@ -197,7 +227,7 @@ class ArtatopWorkflowMaker(Maker):
     def make(self, structure: Structure, prev_dir: Union[str, Path], additional_metadata: Optional[dict] = None) -> Flow:
         # --- Relaxation ---
 
-        relax1_generator = RelaxSetGenerator(
+        relax1_generator = RELAX_GENERATOR(
             user_incar_settings={
                 "EDIFFG": -0.001, "NPAR": 8, "LORBIT": 10, "LREAL": "Auto", "KSPACING": 0.2, "KGAMMA": True, "POTIM":0.3,
                 "LAECHG": None, "LASPH": None, "LVTOT": None, "GGA": None, "LMIXTAU": None,  "ISPIN": None, "LMAXMIX": None,

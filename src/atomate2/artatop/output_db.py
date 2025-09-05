@@ -309,14 +309,14 @@ from pathlib import Path
 
 def write_artatop_analysis_file(output_model, cif_filename: str, filename_dir: str = "./"):
     """
-    Write ART-{cif_name}.dat from SHG summary stored in output_model.shg_summary.
+    Write ART-{cif_name}.dat from ART summary stored in output_model.art_summary.
     """
 
     cif_stem = Path(cif_filename).stem
     filename = Path(filename_dir) / f"ART-{cif_stem}.dat"
 
     # Get SHG summary entries
-    summary_entries = output_model.shg_summary or []
+    summary_entries = output_model.art_summary or []
     
 
     # Get top tensor component and value (assume d33 is largest if not set)

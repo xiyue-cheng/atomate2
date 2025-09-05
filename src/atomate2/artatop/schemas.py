@@ -81,36 +81,38 @@ class DTensorValues(BaseModel):
 class DeffValues(BaseModel):
     energy: float
     deff: float
-class OrbitalContribution(BaseModel):
-    orbital: str  # e.g., "s", "p", or "d"
-    valence: float
-    conduction: float 
-
 class BirefringenceValues(BaseModel):
     energy: float
     delta_n: float
     
-class SHGSummaryEntry(BaseModel):
+class ARTSummaryEntry(BaseModel):
     atom_type: str
     num_atoms: int
     ind: float
     total: float
     vb: float
     cb: float
-    vb_s: float
-    vb_p: float
-    vb_d: float
-    cb_s: float
-    cb_p: float
-    cb_d: float
-    tot_s: float
-    tot_p: float
-    tot_d: float
+    vb_s: float = 0.0
+    vb_p: float = 0.0
+    vb_d: float = 0.0
+    vb_f: float = 0.0
+    cb_s: float = 0.0
+    cb_p: float = 0.0
+    cb_d: float = 0.0
+    cb_f: float = 0.0
+    tot_s: float = 0.0
+    tot_p: float = 0.0
+    tot_d: float = 0.0
+    tot_f: float = 0.0
 
 class DPmVEntry(BaseModel):
-    energy: float
+    nbands: float
     value: float
     label: str  # "d-PmV" or "dshg-PmV"
+    
+class EnergyContributionPoint(BaseModel):
+    E_repr: float  # Energy level (eV)
+    value: float   # SHG or polarization contribution
 
 
 class ArtatopInputModel(BaseModel):
@@ -159,7 +161,7 @@ class ArtatopOutputModel(BaseModel):
 
     dir_name: str = Field(..., description="Directory containing ARTATOP outputs.")
     
-    structure: Optional[Structure] = None
+    relaxed_structure: Optional[Structure] = None
     
     # Base (non-spin-resolved)
     linear_response: list[LinearOpticalResponse]
@@ -194,9 +196,14 @@ class ArtatopOutputModel(BaseModel):
     
     atomic_contributions: Optional[List[AtomicContributions]] = None
     
-    shg_summary: Optional[list[SHGSummaryEntry]] = None
+    art_summary: Optional[list[ARTSummaryEntry]] = None
     d_pmV: Optional[list[DPmVEntry]] = None
     dshg_pmV: Optional[list[DPmVEntry]] = None
+    
+    dshgv: Optional[List[EnergyContributionPoint]] = None
+    dshgc: Optional[List[EnergyContributionPoint]] = None
+    nshgv: Optional[List[EnergyContributionPoint]] = None
+    nshgc: Optional[List[EnergyContributionPoint]] = None
     
     chemical_formula: Optional[str] = None
     space_group: Optional[str] = None
@@ -272,7 +279,6 @@ class ArtatopOutputModel(BaseModel):
 
 class ArtatopTaskDocument(StructureMetadata, extra="allow"):
     """Main schema for an ARTATOP task document."""
-    structure: Structure = Field(description="The structure used in this task")
     
     dir_name: Union[str, Path] = Field(..., description="Directory containing ARTATOP outputs.")
     
@@ -286,11 +292,6 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
     additional_metadata: dict[str, Any] = Field(
         default_factory=dict,
         description="Additional optional metadata related to the task."
-    )
-    
-    builder_meta: dict[str, Union[str, None]] = Field(
-        default_factory=dict,
-        description="Metadata such as builder source and version info."
     )
     last_updated: str = Field(
         default_factory=datetime_str,
@@ -349,13 +350,12 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
                 
         
 
-        # --- Return the full task document ---
+        # --- Return the task document ---
         return cls(
-            structure=output_data.structure,
+            structure=output_data.relaxed_structure,
             dir_name=str(dir_name),
             input_data=input_data,
             output_data=output_data,
-            builder_meta=builder_meta,
             additional_metadata=additional_metadata,
         )
         
@@ -366,50 +366,45 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
         }
         
 def read_saved_json(
-    filename: str, pymatgen_objs: bool = True, query: str = "structure"
+    filename: str, pymatgen_objs: bool = True, query: str = "relaxed_structure"
 ) -> dict[str, Any]:
-    r"""
-    Read the data from  \*.json.gz files corresponding to query.
+    """
+    Read the data from .json.gz files corresponding to query.
 
-    Uses ijson to parse specific keys(memory efficient)
+    Uses ijson to parse specific keys (memory efficient)
 
     Parameters
     ----------
-    filename: str.
-        name of the json file to read
-    pymatgen_objs: bool.
-        if True will convert structure,coop, cobi, cohp and dos to pymatgen objects
-    query: str or None.
-        field name to query from the json file. If None, all data will be returned.
+    filename: str
+        Path to the JSON file (gzipped).
+    pymatgen_objs: bool
+        If True, convert any pymatgen-compatible dicts (e.g., Structure) to actual objects.
+    query: str or None
+        Field name to query from the JSON file. If None, load all fields.
 
     Returns
     -------
     dict
-        Returns a dictionary with artatop task json data corresponding to query.
+        Dictionary of the requested field(s) from the JSON file.
     """
     with gzip.open(filename, "rb") as file:
         artatop_data = {
             field: data
             for obj in ijson.items(file, "item", use_float=True)
             for field, data in obj.items()
-            if query is None or query in obj
+            if query is None or query == field
         }
+
         if not artatop_data:
             raise ValueError(
-                "Please recheck the query argument. "
-                f"No data associated to the requested 'query={query}' "
-                f"found in the JSON file"
+                f"No data associated with 'query={query}' found in the JSON file. "
+                "Please check your query string."
             )
+
     if pymatgen_objs:
-        for query_key, value in artatop_data.items():
-            if isinstance(value, dict):
-                artatop_data[query_key] = MontyDecoder().process_decoded(value)
-            elif "lobsterpy_data" in query_key:
-                for field in artatop_data[query_key].__fields__:
-                    val = MontyDecoder().process_decoded(
-                        getattr(artatop_data[query_key], field)
-                    )
-                    setattr(artatop_data[query_key], field, val)
+        decoder = MontyDecoder()
+        for key, value in artatop_data.items():
+            artatop_data[key] = decoder.process_decoded(value)
 
     return artatop_data
 

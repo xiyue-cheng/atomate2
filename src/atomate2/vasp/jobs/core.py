@@ -33,9 +33,6 @@ if TYPE_CHECKING:
     from atomate2.vasp.sets.base import VaspInputGenerator
 
 
-logger = logging.getLogger(__name__)
-
-
 @dataclass
 class StaticMaker(BaseVaspMaker):
     """

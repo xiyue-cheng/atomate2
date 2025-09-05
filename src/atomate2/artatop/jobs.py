@@ -35,6 +35,7 @@ _FILES_TO_ZIP = [*ARTATOP_OUTPUT_FILES, *VASP_OUTPUT_FILES, *ARTATOP_INPUT_FILES
 
 
 @dataclass
+@dataclass
 class ARTATOPMaker(Maker):
     """
     ARTATOP job maker.
@@ -50,34 +51,19 @@ class ARTATOPMaker(Maker):
     task_document_kwargs : dict
         Keyword arguments passed to :obj:`.ArtatopTaskDocument.from_directory`.
     run_artatop_kwargs : dict
-        Keyword arguments passed to :obj:`.run_artatop`.doc = ArtatopTaskDocument.from_directory(dir_name=str(Path.cwd()), **self.task_document_kwargs)
-            
-        for folder in ARTATOP_OUTPUT_FOLDERS:
-            folder_path = Path.cwd() / folder
-            if folder_path.exists():
-                shutil.make_archive(str(folder_path), "gztar", root_dir=folder_path)
-                shutil.rmtree(folder_path)
-        
-        # gzip folder
-        gzip_output_folder(
-            directory=Path.cwd(),
-            setting=SETTINGS.ARTATOP_ZIP_FILES,
-            files_list=_FILES_TO_ZIP,
-        )
-        logger.info("Compressing ARTATOP output files complete")
-        return doc
+        Keyword arguments passed to :obj:`.run_artatop`.
     calc_type : str
         Calculation type ("lin", "nlin", "art").
     custom_components : str
         Optional components for ART calculations (e.g., tensor components).
     """
 
-    name: str = "artatop"
     task_document_kwargs: dict = field(default_factory=dict)
     run_artatop_kwargs: dict = field(default_factory=dict)
     calc_type: str = "lin"
     custom_components: str | None = None
     scissor: float = 0.0
+    name: str = "artatop"
 
     @job(output_schema=ArtatopTaskDocument)
     def make(
@@ -90,7 +76,7 @@ class ARTATOPMaker(Maker):
         Parameters
         ----------
         wavefunction_dir : str or Path
-            A directory containing a WAVEFUNCTION and other outputs needed for Lobster
+            A directory containing a WAVEFUNCTION and other outputs needed for Artatop
         -------2025-04-15 10:05:31,189 WARNING Response.stored_data is not supported with local manager.
 
         ArtatopTaskDocument
@@ -131,8 +117,8 @@ class ARTATOPMaker(Maker):
         nlin_input = input_handler.get_input_set("nlin", calc_dir=run_dir, scissor=self.scissor)
         run_artatop_step("nlin", nlin_input)
         
-        from atomate2.artatop.artatop_parser import parse_full_optical_response, write_result_re
-        output_model = parse_full_optical_response(run_dir)
+        from atomate2.artatop.artatop_parser import parse_optical_response, write_result_re
+        output_model = parse_optical_response(run_dir)
         write_result_re(output_model, filename=run_dir / "result.re")
 
         # Step 4: Determine ART component (result.re or nonlin files)
@@ -153,7 +139,8 @@ class ARTATOPMaker(Maker):
         for folder in ARTATOP_OUTPUT_FOLDERS:
             folder_path = Path.cwd() / folder
             if folder_path.exists():
-                shutil.make_archive(str(folder_path), "gztar", root_dir=folder_path)
+                shutil.make_archive(
+                 base_name=str(folder_path), format="gztar", root_dir=folder_path.parent, base_dir=folder_path.name)
                 shutil.rmtree(folder_path)
         
         # gzip folder

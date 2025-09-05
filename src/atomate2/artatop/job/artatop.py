@@ -35,8 +35,7 @@ if TYPE_CHECKING:
     from pymatgen.core import Structure
     from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
-
-from pathlib import Path  
+ 
 
 @job
 def get_artatop_jobs(

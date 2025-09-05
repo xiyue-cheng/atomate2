@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Dict
 from pathlib import Path
 from shutil import copyfile
 import os
-import logging
 
 from jobflow import Flow, Maker, job, Response
 from pymatgen.core import Structure
@@ -13,10 +12,13 @@ from pymatgen.io.vasp.inputs import Kpoints, Incar
 
 from atomate2.vasp.jobs.core import HSEStaticMaker, StaticMaker, NonSCFMaker, RelaxMaker
 from atomate2.vasp.sets.core import RelaxSetGenerator, StaticSetGenerator, HSEStaticSetGenerator, NonSCFSetGenerator
+from atomate2.vasp.flows.core import DoubleRelaxMaker
 from atomate2.artatop.job.artatop import get_artatop_jobs
 from atomate2.vasp.files import write_vasp_input_set
 from atomate2.vasp.run import DEFAULT_HANDLERS
 from custodian.custodian import ErrorHandler
+from atomate2.artatop.flows.custom_relax import CustomRelaxMaker
+from atomate2.artatop.flows.handlers import IonicRetryOnceHandler
 
 
 class NON_SCF_GENERATOR(NonSCFSetGenerator):
@@ -92,103 +94,6 @@ class HSE_GENERATOR(HSEStaticSetGenerator):
 
         return VaspInput(incar=vis.incar, poscar=vis.poscar, potcar=vis.potcar, kpoints=None)
 
-        
-# --- Custom Relax Maker ---
-class IonicRetryOnceHandler(ErrorHandler):
-    """Handler that retries an ionic relaxation once with updated parameters."""
-
-    is_monitor = False
-
-    def __init__(self, incar_updates=None, sentinel=".ionic_retry_once"):
-        """
-        Initialize the handler.
-
-        Args:
-            incar_updates: Dict of INCAR parameters to update
-            sentinel: Name of file to create to prevent multiple retries
-        """
-        self.incar_updates = dict(incar_updates or {})
-        self.sentinel = sentinel
-
-    def check(self, directory=""):
-        """
-        Check if the handler should be applied.
-
-        Args:
-            directory (str): Directory to check for files. Defaults to current directory.
-        """
-        sentinel_path = os.path.join(directory, self.sentinel)
-        contcar_path = os.path.join(directory, "CONTCAR")
-        incar_path = os.path.join(directory, "INCAR")
-
-        # Only fire once, and only if we have files to restart from
-        return not os.path.exists(sentinel_path) and os.path.exists(contcar_path) and os.path.exists(incar_path)
-
-    def correct(self, directory=""):
-        """
-        Apply the correction by updating INCAR and copying CONTCAR to POSCAR.
-
-        Args:
-            directory (str): Directory where the files are located. Defaults to current directory.
-        """
-        sentinel_path = os.path.join(directory, self.sentinel)
-        contcar_path = os.path.join(directory, "CONTCAR")
-        poscar_path = os.path.join(directory, "POSCAR")
-        incar_path = os.path.join(directory, "INCAR")
-
-        # Create sentinel file
-        open(sentinel_path, "w").close()
-
-        # Copy CONTCAR to POSCAR
-        copyfile(contcar_path, poscar_path)
-
-        # Update INCAR
-        incar = Incar.from_file(incar_path)
-        retry_base = {"ISTART": 1, "ICHARG": 1}
-        retry_base.update(self.incar_updates)
-        incar.update(retry_base)
-        incar.write_file(incar_path)
-
-        return {
-            "errors": ["ionic_retry_once"],
-            "actions": [
-                {"action": "touch_sentinel", "file": self.sentinel},
-                {"action": "copy_contcar_to_poscar"},
-                {"action": "update_incar", "params": retry_base},
-            ],
-        }
-
-class CustomRelaxMaker(RelaxMaker):
-    def __init__(
-        self,
-        name: str = "relax",
-        incar_update: Optional[Dict] = None,
-        **kwargs,
-    ):
-        self.incar_update = incar_update
-
-        if "run_vasp_kwargs" not in kwargs:
-            kwargs["run_vasp_kwargs"] = {}
-
-        ionic_handler = IonicRetryOnceHandler(incar_updates=incar_update)
-        kwargs["run_vasp_kwargs"]["handlers"] = list(DEFAULT_HANDLERS) + [ionic_handler]
-
-        super().__init__(name=name, **kwargs)
-
-    def make(self, structure, prev_dir=None):
-        job = super().make(structure, prev_dir=prev_dir)
-
-        if not hasattr(job, "run_vasp_kwargs"):
-            job.run_vasp_kwargs = {}
-
-        if "handlers" not in job.run_vasp_kwargs:
-            job.run_vasp_kwargs["handlers"] = self.run_vasp_kwargs["handlers"]
-
-        if hasattr(job, "input_set") and hasattr(job.input_set, "incar"):
-            print(f"[CustomRelaxMaker] Final INCAR settings: {job.input_set.incar}")
-
-        return job
-
 
 # --- Main Flow ---
 class ArtatopWorkflowMaker(Maker):
@@ -205,12 +110,9 @@ class ArtatopWorkflowMaker(Maker):
             },
             user_kpoints_settings= None)  
 
-        relax1_maker = CustomRelaxMaker(
-            input_set_generator=relax1_generator,
+        relax1_maker = CustomRelaxMaker(input_set_generator=relax1_generator,
             incar_update={
-                "EDIFFG": -0.005,
-            }
-        )
+                "EDIFFG": -0.005,})
         relax1_job = relax1_maker.make(structure=structure)
         handlers = relax1_job.run_vasp_kwargs.get("handlers", [])
         relax1_job.name = "relax1" 

@@ -13,9 +13,9 @@ from atomate2.artatop.schemas import (
     DTensorValues,
     DeffValues,
     BirefringenceValues,
-    OrbitalContribution,
-    SHGSummaryEntry,
+    ARTSummaryEntry,
     DPmVEntry,
+    EnergyContributionPoint,
     ArtatopOutputModel,
 )
 
@@ -114,7 +114,7 @@ def parse_linear_optics(lin_dir: Path, line_idx_0: int, line_idx_1: int, energie
     return results, biref_list
 
 # --- Main function to call ---
-def parse_full_optical_response(dir_name: str) -> ArtatopOutputModel:
+def parse_optical_response(dir_name: str) -> ArtatopOutputModel:
     dir_path = Path(dir_name)
     uv_energies = [0.0, 1.167]
     ir_energies = [0.0, 0.65]
@@ -143,6 +143,62 @@ def parse_full_optical_response(dir_name: str) -> ArtatopOutputModel:
         d_tensor_ir=d_tensor_ir,
         deff_values_ir=deff_ir,
     )
+    
+# Add this function near the top utility section:
+def parse_full_spectrum_optics(dir_path: Path) -> None:
+    """
+    Generate REAL.dat, IMAG.dat, refractive.dat, and birefringence.dat
+    from lin_xx.dat, lin_yy.dat, lin_zz.dat in out_lin directory.
+    """
+    lin_dir = dir_path / "out_lin"
+    output_dir = dir_path
+
+    def read_data(file: Path):
+        with open(file, "r") as f:
+            lines = f.readlines()[7:2578]
+            data = []
+            for line in lines:
+                if line.strip().startswith("#") or not line.strip():
+                    continue
+                try:
+                    data.append(list(map(float, line.split())))
+                except ValueError:
+                    continue
+            return data
+
+    esp_xx = read_data(lin_dir / "lin_xx.dat")
+    esp_yy = read_data(lin_dir / "lin_yy.dat")
+    esp_zz = read_data(lin_dir / "lin_zz.dat")
+
+    imag_path = output_dir / "IMAG.dat"
+    real_path = output_dir / "REAL.dat"
+    refr_path = output_dir / "refractive.dat"
+    biref_path = output_dir / "birefringence.dat"
+
+    with open(imag_path, "w") as imag_file, open(real_path, "w") as real_file:
+        for x, y, z in zip(esp_xx, esp_yy, esp_zz):
+            energy = x[0]
+            imag_file.write(f"{energy:.5f} {x[1]:.5f} {y[1]:.5f} {z[1]:.5f}\n")
+            real_file.write(f"{energy:.5f} {x[2]:.5f} {y[2]:.5f} {z[2]:.5f}\n")
+
+    imag = np.loadtxt(imag_path)
+    real = np.loadtxt(real_path)
+
+    with open(refr_path, "w") as refr_file, open(biref_path, "w") as bire_file:
+        for i in range(len(imag)):
+            energy = imag[i][0]
+            im_xx, im_yy, im_zz = imag[i][1:]
+            re_xx, re_yy, re_zz = real[i][1:]
+
+            refra_xx = np.sqrt((np.sqrt(im_xx**2 + re_xx**2) + re_xx) / 2)
+            refra_yy = np.sqrt((np.sqrt(im_yy**2 + re_yy**2) + re_yy) / 2)
+            refra_zz = np.sqrt((np.sqrt(im_zz**2 + re_zz**2) + re_zz) / 2)
+            refra = (refra_xx + refra_yy + refra_zz) / 3
+
+            refr_file.write(f"{energy:.5f} {refra_xx:.5f} {refra_yy:.5f} {refra_zz:.5f} {refra:.5f}\n")
+
+            delta = max(refra_xx, refra_yy, refra_zz) - min(refra_xx, refra_yy, refra_zz)
+            bire_file.write(f"{energy:.5f} {delta:.5f}\n")
 
 # --- Write result.re ---
 def write_result_re(output: ArtatopOutputModel, filename: str = "result.re"):
@@ -187,72 +243,91 @@ def write_result_re(output: ArtatopOutputModel, filename: str = "result.re"):
         write_block(f, "UV Region", output.d_tensor_uv, output.deff_values_uv, output.linear_response_uv, output.birefringence_uv)
         write_block(f, "IR Region", output.d_tensor_ir, output.deff_values_ir, output.linear_response_ir, output.birefringence_ir)
 
+def detect_orbital_type(all_lines: list[str], atoms_count: int) -> int:
+    """Detect orbital type from parsed lines."""
+    # Skip header (9 lines) and empty lines
+    orbital_lines = [line for line in all_lines[9:] if line.strip()]
+    orbitals_per_atom = len(orbital_lines) / atoms_count
+    
+    if orbitals_per_atom == 3:
+        return 3  # spd
+    elif orbitals_per_atom == 4:
+        return 4  # spdf
+    elif orbitals_per_atom == 9:
+        return 9  # lorbit=11
+    else:
+        raise ValueError(f"Unknown orbital configuration: {orbitals_per_atom} orbitals per atom")
+        
 
+    
+from atomate2.artatop.schemas import ARTSummaryEntry
 def parse_orbital_atomic_contributions(structure: Structure, out_dir: Path) -> list[AtomicContributions]:
-    from atomate2.artatop.schemas import AtomicContributions
+    from collections import defaultdict
 
-    val_path = sorted(out_dir.glob("arp_shg_val_*.txt"))[0]
-    con_path = sorted(out_dir.glob("arp_shg_con_*.txt"))[0]
-    all_path = out_dir / "arp_nonlin.txt"
+    try:
+        val_path = next(out_dir.glob("arp_shg_val_*.txt"))
+        con_path = next(out_dir.glob("arp_shg_con_*.txt"))
+        all_path = out_dir / "arp_nonlin.txt"
+    except StopIteration:
+        raise FileNotFoundError("Required ARP files not found in output directory")
 
-    val_lines = val_path.read_text().splitlines()[1:]
-    con_lines = con_path.read_text().splitlines()[1:]
-    all_lines = all_path.read_text().splitlines()[9:-1]  # remove first 9, last 1
+    def read_clean_lines(path: Path, skip_lines: int = 0) -> list[str]:
+        with path.open() as f:
+            return [
+                line for line in f.readlines()[skip_lines:] 
+                if line.strip() and not line.startswith('#')
+            ]
 
-    total_sum = sum(float(line.split()[2]) for line in all_lines)
+    val_lines = read_clean_lines(val_path, skip_lines=1)
+    con_lines = read_clean_lines(con_path, skip_lines=1)
+    all_lines = read_clean_lines(all_path, skip_lines=9)
+
+    try:
+        total_sum = max(
+            sum(float(line.split()[2]) for line in all_lines),
+            1e-10
+        )
+    except (IndexError, ValueError) as e:
+        raise ValueError("Malformed data in arp_nonlin.txt") from e
+
+    orbital_type = len(all_lines) // len(structure)
+    if orbital_type not in {3, 4, 9}:
+        raise ValueError(f"Unexpected orbital type: {orbital_type} orbitals/atom")
 
     atomic_contribs = []
     idx = 0
+
     for i, site in enumerate(structure.sites):
-        atom_label = f"{i+1}-{site.species_string}"
+        try:
+            orb, val, con = {}, {}, {}
 
-        # Total orbital contribution
-        s = float(all_lines[idx + 0].split()[2])
-        p = float(all_lines[idx + 1].split()[2])
-        d = float(all_lines[idx + 2].split()[2])
-        orb = {
-            "s": 100 * s / total_sum,
-            "p": 100 * p / total_sum,
-            "d": 100 * d / total_sum,
-        }
+            orb_labels = {
+                3: ["s", "p", "d"],
+                4: ["s", "p", "d", "f"],
+                9: ["s", "py", "pz", "px", "dxy", "dyz", "dz2", "dxz", "dx2-y2"]
+            }[orbital_type]
 
-        # Valence contribution
-        sv = float(val_lines[idx + 0].split()[2])
-        pv = float(val_lines[idx + 1].split()[2])
-        dv = float(val_lines[idx + 2].split()[2])
-        val = {
-            "s": 100 * sv / total_sum,
-            "p": 100 * pv / total_sum,
-            "d": 100 * dv / total_sum,
-        }
+            for j, label in enumerate(orb_labels):
+                orb[label] = 100 * float(all_lines[idx + j].split()[2]) / total_sum
+                val[label] = 100 * float(val_lines[idx + j].split()[2]) / total_sum
+                con[label] = 100 * float(con_lines[idx + j].split()[2]) / total_sum
 
-        # Conduction contribution
-        sc = float(con_lines[idx + 0].split()[2])
-        pc = float(con_lines[idx + 1].split()[2])
-        dc = float(con_lines[idx + 2].split()[2])
-        con = {
-            "s": 100 * sc / total_sum,
-            "p": 100 * pc / total_sum,
-            "d": 100 * dc / total_sum,
-        }
+            idx += orbital_type
 
-        contrib = AtomicContributions(
-            atom=atom_label,
-            orbital_contributions=orb,
-            valence_contributions=val,
-            conduction_contributions=con,
-            total_contribution = sum(orb.values())
-        )
-        atomic_contribs.append(contrib)
-        idx += 3
+            atomic_contribs.append(AtomicContributions(
+                atom=f"{i+1}-{site.species_string}",
+                orbital_contributions=orb,
+                valence_contributions=val,
+                conduction_contributions=con,
+                total_contribution=sum(orb.values())
+            ))
+
+        except (IndexError, ValueError) as e:
+            raise ValueError(f"Error processing atom {i+1} ({site.species_string}): {str(e)}") from e
 
     return atomic_contribs
-    
-from pathlib import Path
-from atomate2.artatop.schemas import SHGSummaryEntry
 
-
-def write_result_art_IND(summary_entries: list[SHGSummaryEntry], filename: Union[str, Path] = "result.art_IND"):
+def write_result_art_IND(summary_entries: list[ARTSummaryEntry], filename: Union[str, Path] = "result.art_IND"):
     filename = Path(filename)
     with open(filename, "w") as f:
         f.write("Type Natom IND TOT VB CB VB_s VB_p VB_d CB_s CB_p CB_d TOT_s TOT_p TOT_d\n")
@@ -266,9 +341,8 @@ def write_result_art_IND(summary_entries: list[SHGSummaryEntry], filename: Union
                 f"{e.cb_s / nat:.4f} {e.cb_p / nat:.4f} {e.cb_d / nat:.4f} "
                 f"{e.tot_s / nat:.4f} {e.tot_p / nat:.4f} {e.tot_d / nat:.4f}\n"
             )
-def parse_shg_summary_and_dpmv(poscar_path: Path, out_dir: Path) -> tuple[list[SHGSummaryEntry], list[DPmVEntry], list[DPmVEntry]]:
-    import numpy as np
-    from pymatgen.core import Structure
+            
+def parse_art_summary_and_dpmv(poscar_path: Path, out_dir: Path) -> tuple[list[ARTSummaryEntry], list[DPmVEntry], list[DPmVEntry]]:
 
     structure = Structure.from_file(poscar_path)
     dir_path = poscar_path.parent
@@ -281,7 +355,7 @@ def parse_shg_summary_and_dpmv(poscar_path: Path, out_dir: Path) -> tuple[list[S
             f_out.writelines(f_in.readlines()[1:])  # skip header
         return dest
 
-    # Create arp-*.dat files (like shell script)
+    # Create arp-*.dat files 
     arp_val_path = copy_trim("arp_shg_val_*.txt", "arp-val.dat")
     arp_con_path = copy_trim("arp_shg_con_*.txt", "arp-con.dat")
     arp_nshg_path = copy_trim("arp_nshg_*.txt", "arp-nshg.dat")
@@ -292,26 +366,26 @@ def parse_shg_summary_and_dpmv(poscar_path: Path, out_dir: Path) -> tuple[list[S
     with arp_nshg_path.open() as f:
         for line in f:
             parts = line.split()
-            energy = int(float(parts[0]))
+            nbands = int(float(parts[0]))
             val = float(parts[2]) * (4 / 3 * np.pi * 10 / 2)
-            d_pmv.append(DPmVEntry(energy=energy, value=val, label="d-PmV"))
+            d_pmv.append(DPmVEntry(nbands=nbands, value=val, label="prf-PmV"))
 
     with open(out_dir / "d-PmV.dat", "w") as f:
         for entry in d_pmv:
-            f.write(f"{entry.energy} {entry.value:.4f}\n")
+            f.write(f"{entry.nbands} {entry.value:.4f}\n")
 
     # Generate dshg-PmV.dat from arp-dshg.dat
     dshg_pmv = []
     with arp_dshg_path.open() as f:
         for line in f:
             parts = line.split()
-            energy = int(float(parts[0]))
+            nbands = int(float(parts[0]))
             val = float(parts[2]) * (4 / 3 * np.pi * 10 / 2)
-            dshg_pmv.append(DPmVEntry(energy=energy, value=val, label="dshg-PmV"))
+            dshg_pmv.append(DPmVEntry(nbands=nbands, value=val, label="dprf-PmV"))
 
     with open(out_dir / "dshg-PmV.dat", "w") as f:
         for entry in dshg_pmv:
-            f.write(f"{entry.energy} {entry.value:.6f}\n")
+            f.write(f"{entry.nbands} {entry.value:.6f}\n")
 
     # Parse summary from original TXT files
     val_lines = arp_val_path.read_text().splitlines()
@@ -358,7 +432,7 @@ def parse_shg_summary_and_dpmv(poscar_path: Path, out_dir: Path) -> tuple[list[S
         cb = cb_s + cb_p + cb_d
         ind = tot / int(count)
 
-        entry = SHGSummaryEntry(
+        entry = ARTSummaryEntry(
             atom_type=str(atype),
             num_atoms=int(count),
             ind=ind,
@@ -392,8 +466,6 @@ def parse_shg_summary_and_dpmv(poscar_path: Path, out_dir: Path) -> tuple[list[S
 
     return summary_entries, d_pmv, dshg_pmv
 
-
-from pathlib import Path
 
 def parse_procar_and_generate_band_data(procar_path: Path, outcar_path: Path, output_file: Path = Path("energy-band.dat")):
     with open(procar_path) as f:
@@ -444,6 +516,83 @@ def parse_procar_and_generate_band_data(procar_path: Path, outcar_path: Path, ou
 
     return output_file, nk, nband, nion, efermi
     
+    
+def generate_art_draw_files(dir_path: Union[str, Path]) -> dict[str, Path]:
+    """
+    Generates the following files from ARTATOP SHG data:
+    - dshgv, dshgc  → SHG valence / conduction
+    - nshgv, nshgc  → Nonlinear valence / conduction
+
+    Input files:
+        - energy-band.dat (in main dir)
+        - dshg-PmV.dat and d-PmV.dat (in out_nonlin)
+
+    Output files are saved in out_nonlin folder.
+    """
+    dir_path = Path(dir_path)
+    out_dir = dir_path / "out_nonlin"
+
+    energy_band_path = dir_path / "energy-band.dat"
+    dshg_path = out_dir / "dshg-PmV.dat"
+    dpmv_path = out_dir / "d-PmV.dat"
+
+    def read_second_column(file_path: Path) -> list[float]:
+        with open(file_path) as f:
+            return [float(line.split()[1]) for line in f if line.strip()]
+
+    xvals = read_second_column(energy_band_path)
+    yvals_dshg = read_second_column(dshg_path)
+    yvals_dpmv = read_second_column(dpmv_path)
+
+    if not (len(xvals) == len(yvals_dshg) == len(yvals_dpmv)):
+        raise ValueError("Mismatch in data lengths between files")
+
+    dshg_combined = list(zip(xvals, yvals_dshg))
+    nshg_combined = list(zip(xvals, yvals_dpmv))
+
+    def write_combined_file(data: list[tuple[float, float]], filename: Path):
+        with open(filename, "w") as f:
+            for x, y in data:
+                f.write(f"{x:.8f} {y:.8f}\n")
+
+    # Write intermediate combined files (if needed)
+    dshg_tmp = out_dir / "dshg.dat"
+    nshg_tmp = out_dir / "nshg.dat"
+    write_combined_file(dshg_combined, dshg_tmp)
+    write_combined_file(nshg_combined, nshg_tmp)
+
+    # Split into valence and conduction bands
+    def split_by_sign(data: list[tuple[float, float]]) -> tuple[list[tuple[float, float]], list[tuple[float, float]]]:
+        vb = [line for line in data if line[0] < 0]
+        cb = [line for line in data if line[0] >= 0]
+        return vb, cb
+
+    dshg_vb, dshg_cb = split_by_sign(dshg_combined)
+    nshg_vb, nshg_cb = split_by_sign(nshg_combined)
+
+    output_files = {
+        "dshgv": out_dir / "dshgv",
+        "dshgc": out_dir / "dshgc",
+        "nshgv": out_dir / "nshgv",
+        "nshgc": out_dir / "nshgc"
+    }
+
+    write_combined_file(dshg_vb, output_files["dshgv"])
+    write_combined_file(dshg_cb, output_files["dshgc"])
+    write_combined_file(nshg_vb, output_files["nshgv"])
+    write_combined_file(nshg_cb, output_files["nshgc"])
+
+    # Clean up temp files
+    try:
+        dshg_tmp.unlink()
+        nshg_tmp.unlink()
+    except Exception as e:
+        print(f"Warning: Could not remove temp files: {e}")
+
+    return output_files
+    
+
+    
 def get_artatop_functional_data(
     vasprun_pbe: Vasprun,
     vasprun_hse: Vasprun,
@@ -473,6 +622,8 @@ def get_artatop_functional_data(
     aexx = vasprun_hse.parameters.get("AEXX", None)
     nbands = vasprun_hse.parameters.get("NBANDS", None)
     fermi_energy = vasprun_hse.efermi
+    
+    
 
     return {
         "chemical_formula": final_structure.composition.reduced_formula,
@@ -500,6 +651,7 @@ def get_artatop_functional_data(
         "scissor_hse": scissor_hse,
     }   
 
+
                        
 def parse_artatop_outputs(
     dir_name: str,
@@ -519,7 +671,7 @@ def parse_artatop_outputs(
     job_paths = {k: strip_hostname(v) for k, v in job_paths.items()}
 
     # Step 1: Run the full optical response parser
-    parsed_data = parse_full_optical_response(str(dir_path))
+    parsed_data = parse_optical_response(str(dir_path))
 
     # Step 2: Fix POSCAR if needed
     poscar_path = dir_path / "POSCAR"
@@ -536,9 +688,9 @@ def parse_artatop_outputs(
     parse_procar_and_generate_band_data(procar_path, outcar_path)
 
     # Step 3: Parse SHG summary + PMV (this writes result.art_TOT and d-PmV.dat)
-    shg_summary, d_pmv, dshg_pmv = parse_shg_summary_and_dpmv(poscar_path, out_dir)
+    art_summary, d_pmv, dshg_pmv = parse_art_summary_and_dpmv(poscar_path, out_dir)
     # Step 4: Write result.art_IND from SHG summary (not per-atom)
-    write_result_art_IND(shg_summary, filename=dir_path / "result.art_IND")
+    write_result_art_IND(art_summary, filename=dir_path / "result.art_IND")
 
     # Step 5: Parse atomic orbital contributions (optional, for JSON)
     atomic_contribs = parse_orbital_atomic_contributions(relaxed_structure, out_dir)
@@ -679,12 +831,30 @@ def parse_artatop_outputs(
 
     # Step 6: Populate the final model
     output_model = parsed_data
-    output_model.structure = final_structure
+    output_model.original_structure = original_structure
+    output_model.relaxed_structure = final_structure
     
-    output_model.shg_summary = shg_summary
+    output_model.art_summary = art_summary
     output_model.d_pmV = d_pmv
     output_model.dshg_pmV = dshg_pmv
     output_model.atomic_contributions = atomic_contribs
+    
+    draw_files = generate_art_draw_files(dir_path)
+    
+    def read_draw_art_file(path: Path) -> List[EnergyContributionPoint]:
+        with open(path) as f:
+            return [
+                EnergyContributionPoint(
+                    E_repr=float(line.split()[0]),
+                    value=float(line.split()[1])
+                )
+                for line in f if line.strip()
+            ]  
+
+    output_model.dshgv = read_draw_art_file(draw_files["dshgv"])
+    output_model.dshgc = read_draw_art_file(draw_files["dshgc"])
+    output_model.nshgv = read_draw_art_file(draw_files["nshgv"])
+    output_model.nshgc = read_draw_art_file(draw_files["nshgc"])
     
 
     # Add summary and input-extracted properties
@@ -699,7 +869,7 @@ def parse_artatop_outputs(
     output_model.ori_alpha = ori_alpha
     output_model.ori_beta = ori_beta
     output_model.ori_gamma = ori_gamma
-    output_model.original_structure = original_structure
+    
     
     output_model.n_atoms = functional_data["n_atoms"]
     output_model.relax_a = functional_data["relax_a"]
