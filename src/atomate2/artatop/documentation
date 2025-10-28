@@ -1,0 +1,127 @@
+### LOBSTER
+
+Perform ARTATOP analysis with [ARTATOP](http://) 
+
+Initially, a double structural relaxation is performed to obtain an energetically optimized geometry. A static calculation is then carried out to pre-converge the wavefunction and charge density. Using the converged static results, an optics (non-self-consistent field) calculation is performed with an increased number of bands and dense k-point sampling to generate the frequency-dependent dielectric response. In parallel, a hybrid-functional (HSE06) static run is executed on the same relaxed structure to refine the electronic band structure and obtain an accurate bandgap for scissor corrections. The outputs from both the optics and HSE06 calculations are then used as inputs for ARTATOP, which computes the linear and nonlinear optical responses of the material, including dielectric functions, refractive indices, birefringence, second-order susceptibility tensors (χ(2)), and effective nonlinear coefficients (dₑff)as well as atomic and orbital contributions to the overall SHG response. Finally, an automated Python-based post-processing step analyzes the ARTATOP output files to extract and summarize all optical tensors, energy-dependent responses, atomic and orbital contributions, and other derived optical parameters into structured data files and a comprehensive JSON summary.
+
+Please add the ARTATOP command to the `atomate2.yaml` file:
+
+```yaml
+VASP_CMD: <<VASP_CMD>>
+ARTATOP_CMD: <ARTATO_CMD>>
+```
+
+
+The corresponding flow could, for example, be started with the following code:
+
+```py
+from jobflow_remote import submit_flow
+from jobflow import run_locally
+from pymatgen.core import Structure
+from pymongo.mongo_client import MongoClient
+from pathlib import Path
+from atomate2.artatop.flows.artatop import ArtatopWorkflowMaker
+
+
+structure = Structure(
+    lattice=[[0, 2.13, 2.13], [2.13, 0, 2.13], [2.13, 2.13, 0]],
+    species=["Mg", "O"],
+    coords=[[0, 0, 0], [0.5, 0.5, 0.5]],
+)
+eg_exp = 0.0
+# Define the workflow maker
+workflow_maker = ArtatopWorkflowMaker()
+artatop_flow = workflow_maker.make(
+   structure,
+   prev_dir=None,
+   additional_metadata={"eg_exp": eg_exp, "cif_name": cif_path.name}
+)
+# run the job
+run_locally(artatop_flow, create_folders=True)
+```
+
+
+Outputs from the automatic analysis with LobsterPy can easily be extracted from the database and also plotted:
+
+```py
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+def load_data(filename):
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"{filename} not found.")
+    data = np.loadtxt(filename)
+    return data[:, 0], data[:, 1]
+
+# Load your four files
+E_v, zeta_v = load_data("nshgv")   # ζV(E_B)
+E_c, zeta_c = load_data("nshgc")   # ζC(E_B)
+E_dv, dzeta_v = load_data("dshgv") # δζV(E_B)
+E_dc, dzeta_c = load_data("dshgc") # δζC(E_B)
+
+# --- Plot 1: ζV and ζC together ---
+plt.figure(figsize=(8, 3.5))
+plt.plot(E_v, zeta_v, color="darkgreen", label="ζV(E_B) (VB)")
+plt.plot(E_c, zeta_c, color="mediumpurple", label="ζC(E_B) (CB)")
+plt.axvline(0, color="gray", linestyle="--", linewidth=0.8)
+plt.xlabel("E_B (eV)")
+plt.ylabel("ζ(E_B)")
+plt.title("ζ(E_B) vs E_B")
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.4)
+plt.tight_layout()
+plt.savefig("zeta_combined.png", dpi=300)
+plt.close()
+
+# --- Plot 2: δζV and δζC together ---
+plt.figure(figsize=(8, 3.5))
+plt.plot(E_dv, dzeta_v, color="darkgreen", label="δζV(E_B) (VB)")
+plt.plot(E_dc, dzeta_c, color="mediumpurple", label="δζC(E_B) (CB)")
+plt.axvline(0, color="gray", linestyle="--", linewidth=0.8)
+plt.xlabel("E_B (eV)")
+plt.ylabel("δζ(E_B)")
+plt.title("δζ(E_B) vs E_B")
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.4)
+plt.tight_layout()
+plt.savefig("dzeta_combined.png", dpi=300)
+plt.close()
+```
+
+jobflow-remote
+
+Please refer first to the general documentation of jobflow-remote: https://matgenix.github.io/jobflow-remote/.
+
+from jobflow_remote import submit_flow, set_run_config
+from jobflow import Flow
+from pymatgen.core import Structure
+from pymongo.mongo_client import MongoClient
+from atomate2.artatop.flows.artatop import ArtatopWorkflowMaker
+
+structure = Structure(
+    lattice=[[0, 2.13, 2.13], [2.13, 0, 2.13], [2.13, 2.13, 0]],
+    species=["Mg", "O"],
+    coords=[[0, 0, 0], [0.5, 0.5, 0.5]],
+)
+
+workflow_maker = ArtatopWorkflowMaker()
+# --- Make the flow ---
+eg_exp = 0.0
+artatop_flow = workflow_maker.make(
+    structure=structure,
+    prev_dir=None,
+    additional_metadata={"cif_name": cif_path.name}
+)
+
+# --- Optional: set run configuration for specific job names ---
+artatop_flow = set_run_config(
+    artatop_flow,
+    name_filter="optics",
+    resources={"nodes": 1, "ntasks": 1, "partition": "mars"}
+)
+
+# --- Submit the flow ---
+resources = {"nodes": 1, "ntasks": 64, "partition": "mars"}
+submit_flow(artatop_flow, project="atlas", worker="xy_worker", resources=resources)
+

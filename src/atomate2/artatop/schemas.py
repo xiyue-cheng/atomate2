@@ -3,7 +3,7 @@
 import gzip
 import json
 from pathlib import Path
-from typing import Any, Optional, Union, List
+from typing import Any, Optional, Union, List, Tuple
 
 # TODO: remove this kludge when monty is fixed
 from monty.os.path import zpath as monty_zpath
@@ -108,7 +108,7 @@ class ARTSummaryEntry(BaseModel):
 class DPmVEntry(BaseModel):
     nbands: float
     value: float
-    label: str  # "d-PmV" or "dshg-PmV"
+    label: str 
     
 class EnergyContributionPoint(BaseModel):
     E_repr: float  # Energy level (eV)
@@ -162,37 +162,19 @@ class ArtatopOutputModel(BaseModel):
     dir_name: str = Field(..., description="Directory containing ARTATOP outputs.")
     
     relaxed_structure: Optional[Structure] = None
-    
-    # Base (non-spin-resolved)
-    linear_response: list[LinearOpticalResponse]
-    nonlinear_response: list[NonlinearOpticalResponse]
-    d_tensor: Optional[list[DTensorValues]]
-    deff_values: Optional[list[DeffValues]]
-    birefringence: Optional[list[BirefringenceValues]]
 
-    # UV region (new)
+    # UV region 
     linear_response_uv: Optional[list[LinearOpticalResponse]] = None
-    nonlinear_response_uv: Optional[list[NonlinearOpticalResponse]] = None
     d_tensor_uv: Optional[list[DTensorValues]] = None
     deff_values_uv: Optional[list[DeffValues]] = None
     birefringence_uv: Optional[list[BirefringenceValues]] = None
 
-    # IR region (new)
+    # IR region
     linear_response_ir: Optional[list[LinearOpticalResponse]] = None
-    nonlinear_response_ir: Optional[list[NonlinearOpticalResponse]] = None
     d_tensor_ir: Optional[list[DTensorValues]] = None
     deff_values_ir: Optional[list[DeffValues]] = None
     birefringence_ir: Optional[list[BirefringenceValues]] = None
 
-    # Spin-resolved (optional)
-    linear_response_up: Optional[list[LinearOpticalResponse]] = None
-    linear_response_down: Optional[list[LinearOpticalResponse]] = None
-    d_tensor_up: Optional[list[DTensorValues]] = None
-    d_tensor_down: Optional[list[DTensorValues]] = None
-    deff_values_up: Optional[list[DeffValues]] = None
-    deff_values_down: Optional[list[DeffValues]] = None
-    birefringence_up: Optional[list[BirefringenceValues]] = None
-    birefringence_down: Optional[list[BirefringenceValues]] = None
     
     atomic_contributions: Optional[List[AtomicContributions]] = None
     
@@ -200,10 +182,8 @@ class ArtatopOutputModel(BaseModel):
     d_pmV: Optional[list[DPmVEntry]] = None
     dshg_pmV: Optional[list[DPmVEntry]] = None
     
-    dshgv: Optional[List[EnergyContributionPoint]] = None
-    dshgc: Optional[List[EnergyContributionPoint]] = None
-    nshgv: Optional[List[EnergyContributionPoint]] = None
-    nshgc: Optional[List[EnergyContributionPoint]] = None
+    d_energy: Optional[List[Tuple[float, float]]] = None       # list of (energy, d-PmV)
+    dshg_energy: Optional[List[Tuple[float, float]]] = None    # list of (energy, dshg-PmV)
     
     chemical_formula: Optional[str] = None
     space_group: Optional[str] = None
@@ -248,8 +228,8 @@ class ArtatopOutputModel(BaseModel):
     ediffg_relax2: Optional[float] = None
     aexx_hse: Optional[float] = None
     
-    art_top_component: Optional[str] = None
-    art_top_value: Optional[float] = None
+    art_highest_component: Optional[str] = None
+    art_highest_value: Optional[float] = None
     
     @classmethod
     def from_directory(
@@ -330,7 +310,20 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
 
         if additional_metadata is None:
             additional_metadata = {}
-        builder_meta = {"source": "artatop", "version": __version__}
+            
+        structure=output_data.relaxed_structure,
+        
+        base_doc = cls(
+            structure=structure,
+            dir_name=str(dir_name),
+            input_data=input_data,
+            output_data=output_data,
+            additional_metadata=additional_metadata,)
+            
+        if base_doc.builder_meta is None:
+           base_doc.builder_meta = {}
+        base_doc.builder_meta.update({
+        "source": "artatop", "version": __version__})
 
         # --- Optionally save JSON summary ---
         if store_additional_json:
@@ -340,7 +333,7 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
                 blocks = [
                     {"output_data": output_data},
                     {"additional_metadata": additional_metadata},
-                    {"builder_meta": builder_meta},
+                    {"builder_meta": base_doc.builder_meta},
                 ]
                 for i, block in enumerate(blocks):
                     json.dump(jsanitize(block, strict=True, allow_bson=True), file)
@@ -351,13 +344,7 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
         
 
         # --- Return the task document ---
-        return cls(
-            structure=output_data.relaxed_structure,
-            dir_name=str(dir_name),
-            input_data=input_data,
-            output_data=output_data,
-            additional_metadata=additional_metadata,
-        )
+        return base_doc
         
     class Config:
         arbitrary_types_allowed = True

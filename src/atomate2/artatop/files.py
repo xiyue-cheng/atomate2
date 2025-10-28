@@ -84,9 +84,8 @@ def copy_artatop_files(
     logger.info(f"Copying ARTATOP inputs from {src_dir} to {dest_dir}")
     directory_listing = file_client.listdir(src_dir, host=src_host)
 
-    # Collect required files (e.g., WAVECAR, vasprun.xml)
     files = []
-    for file in VASP_OUTPUT_FILES:  # Ensure VASP_OUTPUT_FILES is defined
+    for file in VASP_OUTPUT_FILES: 
         found_file = get_zfile(directory_listing, file, allow_missing=True)
         if found_file is not None:
             files.append(found_file)

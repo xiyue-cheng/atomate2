@@ -9,11 +9,11 @@ from jobflow import Flow, Maker, job, Response
 from pymatgen.core import Structure
 
 from pymatgen.io.vasp import VaspInput, Vasprun
-from pymatgen.io.vasp.inputs import Incar
+from pymatgen.io.vasp.inputs import Kpoints, Incar
 
 from atomate2.vasp.jobs.core import HSEStaticMaker, StaticMaker, NonSCFMaker, RelaxMaker
 from atomate2.vasp.sets.core import RelaxSetGenerator, StaticSetGenerator, HSEStaticSetGenerator, NonSCFSetGenerator
-from atomate2.artatop.job.artatop import get_artatop_jobs
+from atomate2.vasp.job.artatop import get_artatop_jobs
 from atomate2.vasp.files import write_vasp_input_set
 from atomate2.vasp.run import DEFAULT_HANDLERS
 from custodian.custodian import ErrorHandler
@@ -174,7 +174,7 @@ class ArtatopWorkflowMaker(Maker):
                
         hse_generator = HSE_GENERATOR(
             user_incar_settings={
-                "NPAR": 64,  "GGA": None, "ISMEAR": 0, "LAECHG": None, "LASPH": True, "ENAUG": None, "LMIXTAU": None, "ISYM": None, "ISPIN": None,
+                "NPAR": 8,  "GGA": None, "ISMEAR": 0, "LAECHG": None, "LASPH": True, "ENAUG": None, "LMIXTAU": None, "ISYM": None, "ISPIN": None,
                 "LREAL": "Auto", "LORBIT": 10, "KGAMMA": True, "NELM": 60, "NELMDL": -5, "NELMIN": 4,                
                 "LVTOT": None, "MAGMOM": None, "LMAXMIX": None, "LDAU": None,
                 "LCHARG": False, "ALGO": "Damped",  "TIME": 0.4, "SIGMA": 0.01, "LHFCALC": True, "HFSCREEN": 0.2, "PRECFOCK": "Normal",

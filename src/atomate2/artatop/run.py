@@ -96,7 +96,7 @@ def run_artatop(
         jobs,
         validators=validators,
         max_errors=max_errors,
-        scratch_dir=str(scratch_dir),  # Ensure scratch_dir is a string
+        scratch_dir=str(scratch_dir),
         **custodian_kwargs,
     )
 
