@@ -9,14 +9,12 @@ from pymatgen.io.vasp.inputs import Incar
 from atomate2.utils.path import strip_hostname
 from atomate2.artatop.schemas import (
     LinearOpticalResponse,
-    NonlinearOpticalResponse,
     AtomicContributions,
     DTensorValues,
     DeffValues,
     BirefringenceValues,
     ARTSummaryEntry,
     DPmVEntry,
-    EnergyContributionPoint,
     ArtatopOutputModel,
 )
 
@@ -28,7 +26,6 @@ from atomate2.artatop.output_db import (
     write_artatop_analysis_file
     )
 
-PI = np.pi
 
 # --- Utility: Read specific line from file and return float ---
 def read_value_from_line(path: Path, line_number: int, col: int = 2) -> float:
@@ -51,7 +48,7 @@ def parse_d_tensor_and_deff(nonlin_dir: Path, line_idx_0: int, line_idx_1: int, 
         for comp in components:
             path = nonlin_dir / f"nonlin_{comp}.dat"
             val = read_value_from_line(path, line_idx)
-            d[f"d_{comp}"] = (val / 2.0) * (4 * PI / 3.0) * 10
+            d[f"d_{comp}"] = (val / 2.0) * (4 * np.pi / 3.0) * 10
         return d
 
     def compute_deff(d):
@@ -253,42 +250,7 @@ def detect_orbital_type(all_lines: list[str], atoms_count: int) -> int:
         return 9  # lorbit=11
     else:
         raise ValueError(f"Unknown orbital configuration: {orbitals_per_atom} orbitals per atom")
-        
-
-
-
-from pathlib import Path
-from atomate2.artatop.schemas import ARTSummaryEntry
-from collections import defaultdict
-
-def split_direction_blocks(path: Path, skip_lines: int = 0) -> dict[str, list[str]]:
-    """Split arp_nonlin.txt into blocks per tensor direction (e.g., yyy, yyx, etc.)."""
-    blocks = {}
-    current_dir = None
-    current_lines = []
-
-    with path.open() as f:
-        for line in f.readlines()[skip_lines:]:
-            if not line.strip():
-                continue
-            ls = line.lstrip()
-            if ls.startswith("# direct"):
-                if current_dir and current_lines:
-                    blocks[current_dir] = current_lines
-                    current_lines = []
-                current_dir = ls.split()[-1]  # e.g. yyy
-            elif ls.lower().startswith("tot"):
-                if current_dir and current_lines:
-                    blocks[current_dir] = current_lines
-                    current_lines = []
-                    current_dir = None
-            elif not ls.startswith("#"):
-                current_lines.append(line)
-        if current_dir and current_lines:
-            blocks[current_dir] = current_lines
-
-    return blocks
-
+       
 
 def parse_orbital_atomic_contributions(structure: Structure, out_dir: Path) -> list[AtomicContributions]:
     """Parse orbital and atomic contributions from ARTATOP nonlinear output."""

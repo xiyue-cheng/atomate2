@@ -24,7 +24,6 @@ from pymatgen.io.vasp import Vasprun
 from monty.os.path import zpath
 from atomate2.utils.path import strip_hostname
 
-from atomate2.vasp.jobs.base import BaseVaspMaker
 from atomate2.vasp.sets.core import NonSCFSetGenerator
 from atomate2.artatop.jobs import ARTATOPMaker
 from atomate2.artatop.files import copy_artatop_files
@@ -33,7 +32,6 @@ from atomate2.artatop.schemas import ArtatopTaskDocument, ArtatopInputModel, Art
 if TYPE_CHECKING:
     from pathlib import Path
     from pymatgen.core import Structure
-    from atomate2.vasp.sets.base import VaspInputGenerator
 logger = logging.getLogger(__name__)
  
 

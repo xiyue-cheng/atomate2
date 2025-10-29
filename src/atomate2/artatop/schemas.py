@@ -5,24 +5,29 @@ import json
 from pathlib import Path
 from typing import Any, Optional, Union, List, Tuple
 
-# TODO: remove this kludge when monty is fixed
-from monty.os.path import zpath as monty_zpath
 from pydantic import BaseModel, Field
 from atomate2 import SETTINGS, __version__
-import numpy as np
 from emmet.core.structure import StructureMetadata
-from monty.dev import requires
 from monty.json import MontyDecoder, jsanitize
+import datetime as _dt
+
+
+def _json_default(o):
+    """Fallback JSON serializer for objects not handled by the encoder.
+
+    Currently converts datetime/date/time objects to ISO strings. Any other
+    unknown object will be converted to str(o) as a last resort so json.dump
+    doesn't raise a TypeError.
+    """
+    try:
+        if isinstance(o, (_dt.datetime, _dt.date, _dt.time)):
+            return o.isoformat()
+    except Exception:
+        pass
+    return str(o)
 
 from pymatgen.io.vasp import Vasprun
 from pymatgen.core import Structure
-from typing_extensions import Self
-
-from atomate2.common.utils import (
-    parse_additional_json,
-    parse_custodian,
-    parse_transformations,
-)
 
 
 from atomate2.utils.datetime import datetime_str
@@ -109,10 +114,7 @@ class DPmVEntry(BaseModel):
     nbands: float
     value: float
     label: str 
-    
-class EnergyContributionPoint(BaseModel):
-    E_repr: float  # Energy level (eV)
-    value: float   # SHG or polarization contribution
+   
 
 
 class ArtatopInputModel(BaseModel):
@@ -322,8 +324,18 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
             
         if base_doc.builder_meta is None:
            base_doc.builder_meta = {}
-        base_doc.builder_meta.update({
-        "source": "artatop", "version": __version__})
+           
+        builder_dict = (
+            base_doc.builder_meta.dict()
+            if hasattr(base_doc.builder_meta, "dict")
+            else base_doc.builder_meta
+        )
+        
+        base_doc.builder_meta = {
+            **builder_dict,
+            "source": "artatop",
+            "version": __version__,
+        }
 
         # --- Optionally save JSON summary ---
         if store_additional_json:
@@ -336,7 +348,11 @@ class ArtatopTaskDocument(StructureMetadata, extra="allow"):
                     {"builder_meta": base_doc.builder_meta},
                 ]
                 for i, block in enumerate(blocks):
-                    json.dump(jsanitize(block, strict=True, allow_bson=True), file)
+                    json.dump(
+                        jsanitize(block, strict=False, allow_bson=True),
+                        file,
+                        default=_json_default,
+                    )
                     if i < len(blocks) - 1:
                         file.write(",")
                 file.write("]")
@@ -398,4 +414,4 @@ def read_saved_json(
     def save_to_json(self, filename: str) -> None:
         """Save the task document as a compressed JSON file."""
         with gzip.open(filename, "wt", encoding="UTF-8") as file:
-            json.dump(self.dict(), file, indent=4)
+            json.dump(self.dict(), file, indent=4, default=_json_default)

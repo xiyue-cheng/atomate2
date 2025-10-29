@@ -1,7 +1,6 @@
 from __future__ import annotations
-from typing import Optional, Union, Dict, Any
+from typing import Optional, Union, Any
 from pathlib import Path
-from shutil import copyfile
 import os
 import logging
 
@@ -9,13 +8,10 @@ from jobflow import Flow, Maker, job, Response
 from pymatgen.core import Structure
 
 from pymatgen.io.vasp import VaspInput, Vasprun
-from pymatgen.io.vasp.inputs import Incar
 
 from atomate2.vasp.jobs.core import HSEStaticMaker, StaticMaker, NonSCFMaker, RelaxMaker
 from atomate2.vasp.sets.core import RelaxSetGenerator, StaticSetGenerator, HSEStaticSetGenerator, NonSCFSetGenerator
 from atomate2.artatop.job.artatop import get_artatop_jobs
-from atomate2.vasp.files import write_vasp_input_set
-from atomate2.vasp.run import DEFAULT_HANDLERS
 from custodian.custodian import ErrorHandler
 
 

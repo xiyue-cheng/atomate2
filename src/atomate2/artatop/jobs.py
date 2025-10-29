@@ -6,7 +6,6 @@ import logging
 import os
 import subprocess
 import shutil
-from shutil import copyfile
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,7 +20,6 @@ from atomate2.artatop.files import (
     VASP_OUTPUT_FILES,
     ARTATOP_INPUT_FILES,
     copy_artatop_files,
-    validate_required_files,
 )
 from atomate2.artatop.files import ARTATOP_OUTPUT_FOLDERS 
 

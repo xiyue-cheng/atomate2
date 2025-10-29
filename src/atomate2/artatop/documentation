@@ -44,49 +44,41 @@ run_locally(artatop_flow, create_folders=True)
 Outputs from the automatic analysis with LobsterPy can easily be extracted from the database and also plotted:
 
 ```py
-import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
-import os
+from pathlib import Path
 
-def load_data(filename):
-    if not os.path.exists(filename):
-        raise FileNotFoundError(f"{filename} not found.")
-    data = np.loadtxt(filename)
-    return data[:, 0], data[:, 1]
+# Path to your out_nonlin directory
+out_dir = Path("/home/asma/Work/jf_calculations/art_local/test/art")
+data_file = out_dir / "d_energy.dat"
 
-# Load your four files
-E_v, zeta_v = load_data("nshgv")   # ζV(E_B)
-E_c, zeta_c = load_data("nshgc")   # ζC(E_B)
-E_dv, dzeta_v = load_data("dshgv") # δζV(E_B)
-E_dc, dzeta_c = load_data("dshgc") # δζC(E_B)
+# Read the data file
+df = pd.read_csv(data_file, delim_whitespace=True, header=None)
 
-# --- Plot 1: ζV and ζC together ---
-plt.figure(figsize=(8, 3.5))
-plt.plot(E_v, zeta_v, color="darkgreen", label="ζV(E_B) (VB)")
-plt.plot(E_c, zeta_c, color="mediumpurple", label="ζC(E_B) (CB)")
-plt.axvline(0, color="gray", linestyle="--", linewidth=0.8)
-plt.xlabel("E_B (eV)")
-plt.ylabel("ζ(E_B)")
-plt.title("ζ(E_B) vs E_B")
+# Assign column names
+df.columns = ["E", "Value"]
+
+# Split into valence and conduction regions
+df_vb = df[df["E"] <= 0]  # Valence band (E < 0)
+df_cb = df[df["E"] > 0]   # Conduction band (E > 0)
+
+# Plot
+plt.figure(figsize=(8, 4))
+plt.plot(df_vb["E"], df_vb["Value"], color="green", label="VB (E < 0)")
+plt.plot(df_cb["E"], df_cb["Value"], color="#9932CC", label="CB (E > 0)")
+
+# Add small, smooth scatter points
+plt.scatter(df_vb["E"], df_vb["Value"], color="green", s=10, alpha=0.6)
+plt.scatter(df_cb["E"], df_cb["Value"], color="#9932CC", s=10, alpha=0.6)
+
+# Axis and labels
+plt.axvline(0, color="red", linestyle=":", linewidth=1)
+plt.xlabel(r"$E_B$ (eV)")
+plt.ylabel(r"$\zeta(E_B)$ (pm/V)")
 plt.legend()
-plt.grid(True, linestyle="--", alpha=0.4)
+plt.grid(True, linestyle="--", alpha=0.3)
 plt.tight_layout()
-plt.savefig("zeta_combined.png", dpi=300)
-plt.close()
-
-# --- Plot 2: δζV and δζC together ---
-plt.figure(figsize=(8, 3.5))
-plt.plot(E_dv, dzeta_v, color="darkgreen", label="δζV(E_B) (VB)")
-plt.plot(E_dc, dzeta_c, color="mediumpurple", label="δζC(E_B) (CB)")
-plt.axvline(0, color="gray", linestyle="--", linewidth=0.8)
-plt.xlabel("E_B (eV)")
-plt.ylabel("δζ(E_B)")
-plt.title("δζ(E_B) vs E_B")
-plt.legend()
-plt.grid(True, linestyle="--", alpha=0.4)
-plt.tight_layout()
-plt.savefig("dzeta_combined.png", dpi=300)
-plt.close()
+plt.show()
 ```
 
 jobflow-remote
@@ -118,10 +110,10 @@ artatop_flow = workflow_maker.make(
 artatop_flow = set_run_config(
     artatop_flow,
     name_filter="optics",
-    resources={"nodes": 1, "ntasks": 1, "partition": "mars"}
+    resources={"nodes": 1, "ntasks": 1, "partition": "xyz"}
 )
 
 # --- Submit the flow ---
-resources = {"nodes": 1, "ntasks": 64, "partition": "mars"}
+resources = {"nodes": 1, "ntasks": 64, "partition": "xyz"}
 submit_flow(artatop_flow, project="atlas", worker="xy_worker", resources=resources)
 
