@@ -219,6 +219,7 @@ class ArtatopOutputModel(BaseModel):
     nbands_static: Optional[int] = None
     nbands_optics: Optional[int] = None
     total_energy_static: Optional[float] = None
+    enthalpy: Optional[float] = Field(None, description="Enthalpy per atom (eV/atom)")
 
     kpoints_relax1: Optional[list[int]] = None
     kpoints_relax2: Optional[list[int]] = None

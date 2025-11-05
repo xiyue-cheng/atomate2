@@ -170,7 +170,7 @@ class ArtatopWorkflowMaker(Maker):
                
         hse_generator = HSE_GENERATOR(
             user_incar_settings={
-                "NPAR": 8,  "GGA": None, "ISMEAR": 0, "LAECHG": None, "LASPH": True, "ENAUG": None, "LMIXTAU": None, "ISYM": None, "ISPIN": None,
+                "NPAR": 8, "GGA": None, "ISMEAR": 0, "LAECHG": None, "LASPH": True, "ENAUG": None, "LMIXTAU": None, "ISYM": None, "ISPIN": None,
                 "LREAL": "Auto", "LORBIT": 10, "KGAMMA": True, "NELM": 60, "NELMDL": -5, "NELMIN": 4,                
                 "LVTOT": None, "MAGMOM": None, "LMAXMIX": None, "LDAU": None,
                 "LCHARG": False, "ALGO": "Damped",  "TIME": 0.4, "SIGMA": 0.01, "LHFCALC": True, "HFSCREEN": 0.2, "PRECFOCK": "Normal",

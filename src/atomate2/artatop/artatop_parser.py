@@ -897,6 +897,10 @@ def parse_artatop_outputs(
     output_model.nbands_optics = nbands_optics
     output_model.total_energy_static = total_energy_static
 
+    # --- Enthalpy (eV/atom) ---
+    natoms = len(final_structure)
+    output_model.enthalpy = total_energy_static / natoms
+
     output_model.ediffg_relax2 = ediffg_relax2
     output_model.aexx_hse = aexx_hse
     
